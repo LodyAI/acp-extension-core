@@ -38,4 +38,13 @@ export type UsageData = {
   fiveHourResetAt: number | null;
   sevenDayResetAt: number | null;
   apiUnavailable?: boolean;
+  /** Optional provider-reported prepaid/overage wallet, in whole cents. */
+  extraUsage?: {
+    balanceCents: number;
+    totalCents: number;
+    monthlyChargeLimitEnabled: boolean;
+    monthlyChargeLimitCents: number;
+    monthlyUsedCents: number;
+    currency: string;
+  } | null;
 };
