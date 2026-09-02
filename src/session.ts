@@ -80,6 +80,12 @@ export type LodySteerRequest<TContent = unknown> = {
 };
 
 export type LodySteerResponse = {
+  /**
+   * `failed` is a conclusive negative acknowledgement: the adapter proved the
+   * prompt was not applied, so the caller may safely dispatch it again. An
+   * adapter that cannot prove non-application must throw instead of returning
+   * `failed`; transport and internal failures are delivery-ambiguous.
+   */
   outcome: 'injected' | 'failed';
 };
 
