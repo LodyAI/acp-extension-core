@@ -134,6 +134,17 @@ export type LodyNotice = {
   source?: string;
 };
 
+/**
+ * Optional human-readable provider label on a `SessionConfigSelectOption`.
+ * Wire path: `_meta.lody.modelOption`. Omit `provider` when unnamed.
+ */
+export const LODY_MODEL_OPTION_META_KEY = 'modelOption' as const;
+
+export type LodyModelOptionMeta = {
+  version: 1;
+  provider?: string;
+};
+
 export type LodySessionMeta = {
   turnId?: string;
   forkAtTurn?: { version: 1; turnId?: string };

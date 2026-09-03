@@ -30,6 +30,7 @@ Provider-neutral contracts for Lody capabilities that are not part of ACP.
 | Compaction/retry lifecycle              | `tool_call` / `tool_call_update` | `_meta.lody.activity`                                           |
 | Canonical tool identity                 | `tool_call` / `tool_call_update` | `_meta.lody.toolName`                                           |
 | Goal/notice/title/message phase         | normal session update            | `_meta.lody.<feature>`                                          |
+| Model option provider                   | `SessionConfigSelectOption`      | `_meta.lody.modelOption` for an optional provider label         |
 
 ## Custom methods
 
