@@ -1,4 +1,9 @@
 export type RateLimitWindow = {
+  /** Provider-supplied scope label (for example, "Fable"), shown alongside the duration.
+   * Display-only: absence means an unlabeled window, not a model-selection rule.
+   * Equal durations may describe distinct quotas and must not be deduplicated.
+   */
+  label?: string;
   /** Normalized percentage in the inclusive 0..100 range. */
   usedPercent: number;
   windowDurationSeconds: number | null;
