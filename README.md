@@ -42,6 +42,14 @@ unrelated DTO. Rate limits support both proactive
 `_lody/rate_limits/get` queries. The query is not session-bound; `sessionId`,
 `accountId`, and `modelId` are optional filters.
 
+Each rate limit's `windows` is the complete current list of concurrent quota
+constraints. A window may carry a provider-supplied `label` such as `Fable`,
+displayed alongside its duration. Multiple windows may have the same duration:
+an all-model weekly quota and a model weekly sub-cap remain separate meters,
+not additive allowances. Labels are display-only; do not use them for routing
+or deduplicate windows by duration, utilization, or reset time. This optional
+field is additive to the version 1 rate-limit contract.
+
 Adapters should emit only the current contracts. Compatibility with payloads
 that predate this package belongs at the consumer boundary and should be
 time-bounded.
