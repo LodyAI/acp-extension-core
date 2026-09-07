@@ -2,6 +2,11 @@ export type LodyVersionOneCapability = {
   version: 1;
 };
 
+/** Explicitly opts out of all MCP; omission preserves standard ACP behavior. */
+export type LodyMcpCapability = LodyVersionOneCapability & {
+  supported: false;
+};
+
 export type LodySteeringCapability = LodyVersionOneCapability & {
   transport: 'request' | 'prompt';
   upstreamTurn: 'same' | 'handoff';
@@ -31,6 +36,7 @@ export type LodyRateLimitsCapability = LodyVersionOneCapability & {
 };
 
 export type LodyExtensionCapabilities = {
+  mcp?: LodyMcpCapability;
   usage?: LodyVersionOneCapability;
   rateLimits?: LodyRateLimitsCapability;
   forkAtTurn?: LodyVersionOneCapability;

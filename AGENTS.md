@@ -7,3 +7,5 @@
   Equal durations, utilization, or reset times do not make windows duplicates.
   Preserve compatibility with version 1 payloads that omit the label.
 - Run `npm run build` and `npm run typecheck` when changing contracts.
+- MCP opt-out is version 1 with `supported: false`; omission preserves ACP
+  defaults. It never authorizes silently dropping a turn's selected MCP servers.

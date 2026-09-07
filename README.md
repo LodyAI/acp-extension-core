@@ -31,6 +31,20 @@ Provider-neutral contracts for Lody capabilities that are not part of ACP.
 | Canonical tool identity                 | `tool_call` / `tool_call_update` | `_meta.lody.toolName`                                           |
 | Goal/notice/title/message phase         | normal session update            | `_meta.lody.<feature>`                                          |
 
+## MCP opt-out
+
+ACP v1 assumes stdio MCP support. An adapter that implements no MCP can declare
+`agentCapabilities._meta.lody.mcp = { version: 1, supported: false }`.
+This disables all MCP transports, including host-provided builtin servers.
+Omission preserves standard ACP behavior; consumers recognize only version 1
+with `supported: false`, not unknown versions or malformed declarations.
+
+Hosts must not mount builtin servers for this adapter. If a turn explicitly
+selects workspace MCP servers, reject that configuration with an actionable
+explanation rather than silently dropping the selection. Host-owned features
+that do not require agent MCP calls remain available. Adapters still reject
+nonempty MCP lists received from hosts that do not understand this extension.
+
 ## Custom methods
 
 Method names and their request/response types are exported from `src/methods.ts`
