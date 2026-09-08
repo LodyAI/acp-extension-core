@@ -7,3 +7,6 @@
   Equal durations, utilization, or reset times do not make windows duplicates.
   Preserve compatibility with version 1 payloads that omit the label.
 - Run `npm run build` and `npm run typecheck` when changing contracts.
+
+- Independent planning uses the boolean `plan_mode` config option from this package.
+  It does not select sandbox or approval policy; advertise only when supported.
