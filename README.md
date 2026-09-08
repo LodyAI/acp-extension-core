@@ -57,3 +57,16 @@ time-bounded.
 `LODY_TOOL_NAMES` defines the stable identities for tool flows that Lody treats
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
+
+## Plan mode configuration
+
+`LODY_PLAN_MODE_CONFIG_ID` is `plan_mode`. `createPlanModeConfigOption(active)`
+builds the boolean ACP config option; clients send boolean values through
+`session/set_config_option` and consume normal config snapshots/updates. There
+is no separate Plan RPC or provider-specific collaboration vocabulary.
+
+Providers advertise this option only for sessions that support independent
+planning. Selecting it preserves sandbox and approval policy; it does not
+promise read-only enforcement. Providers own the native translation, durable
+state, plan review, and pending-switch behavior. Claude's permission-based Plan
+mode is outside this contract.

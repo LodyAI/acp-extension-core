@@ -4,3 +4,4 @@ export * from './methods.js';
 export * from './rate-limits.js';
 export * from './session.js';
 export * from './usage.js';
+export * from './plan-mode.js';
