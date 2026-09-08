@@ -39,11 +39,13 @@ This disables all MCP transports, including host-provided builtin servers.
 Omission preserves standard ACP behavior; consumers recognize only version 1
 with `supported: false`, not unknown versions or malformed declarations.
 
-Hosts must not mount builtin servers for this adapter. If a turn explicitly
-selects workspace MCP servers, reject that configuration with an actionable
-explanation rather than silently dropping the selection. Host-owned features
-that do not require agent MCP calls remain available. Adapters still reject
-nonempty MCP lists received from hosts that do not understand this extension.
+Hosts must not mount builtin servers for this adapter. When establishing a new,
+restored, or replacement ACP session, reject a nonempty workspace MCP selection
+for that startup with an actionable explanation rather than dropping it. This
+declaration does not require changing a resident session's MCP configuration on
+each prompt or steer. Host-owned features that do not require agent MCP calls
+remain available. Adapters still reject nonempty MCP lists received from hosts
+that do not understand this extension.
 
 ## Custom methods
 
