@@ -9,3 +9,7 @@
 - Run `npm run build` and `npm run typecheck` when changing contracts.
 - `worktreeProject` is logical identity only: never change ACP cwd, permissions,
   workspace roots, or worktree lifecycle ownership to implement project grouping.
+
+
+- Independent planning uses the boolean `plan_mode` config option from this package.
+  It does not select sandbox or approval policy; advertise only when supported.

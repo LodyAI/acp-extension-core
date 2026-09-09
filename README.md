@@ -78,3 +78,16 @@ Project identity does not grant directory access, add workspace roots, change
 `cwd`, or transfer worktree creation/cleanup ownership to the provider. It does
 not change the standard `session/list.cwd` filter or promise a provider-specific
 worktree badge. Project-wide catalog queries are a separate extension concern.
+
+## Plan mode configuration
+
+`LODY_PLAN_MODE_CONFIG_ID` is `plan_mode`. `createPlanModeConfigOption(active)`
+builds the boolean ACP config option; clients send boolean values through
+`session/set_config_option` and consume normal config snapshots/updates. There
+is no separate Plan RPC or provider-specific collaboration vocabulary.
+
+Providers advertise this option only for sessions that support independent
+planning. Selecting it preserves sandbox and approval policy; it does not
+promise read-only enforcement. Providers own the native translation, durable
+state, plan review, and pending-switch behavior. Claude's permission-based Plan
+mode is outside this contract.
