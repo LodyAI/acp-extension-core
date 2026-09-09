@@ -58,6 +58,38 @@ time-bounded.
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
 
+## Goal control
+
+A goal is durable session state, not a running prompt. Its two halves travel on
+different transports because they need different things from ACP v1:
+
+| Transport                       | Actions                    | Property                                    |
+| ------------------------------- | -------------------------- | ------------------------------------------- |
+| `_lody/session/goal` request    | status-only actions        | Never starts a turn; works mid-prompt       |
+| `prompt._meta.lody.goalControl` | any advertised action      | Runs inside the prompt the client owns      |
+
+The request exists for `pause` and `clear`: an active goal keeps a prompt open
+across the agent's own continuations, so a client that could only speak through
+prompts would have no way to reach a goal it wants to stop. Agents must accept
+these mid-prompt and must not start a turn for them.
+
+`set` and `resume` start work, and ACP v1 gives a client exactly one way to own
+running work — its own prompt. The client sends a prompt carrying
+`_meta.lody.goalControl` instead of user-visible command text; the agent applies
+the action, adopts any turn the action started natively, and keeps that prompt
+open for the goal's remaining turns. Status-only actions may travel this way
+too, which is what lets a client reach a goal whose session is not running.
+
+An agent may also accept work-starting actions on the request for clients that
+cannot carry prompt metadata, but then the agent owns starting the work and the
+client sees turns it never prompted. Clients that must attribute every turn to a
+conversation entry use `promptActions` for exactly this reason.
+
+`LodyGoalCapability` advertises `actions` (everything implemented),
+`controlActions` (accepted on the request while a prompt is in flight), and
+`promptActions` (accepted through prompt metadata). Clients must not infer an
+action's transport from `actions` alone.
+
 ## Plan mode configuration
 
 `LODY_PLAN_MODE_CONFIG_ID` is `plan_mode`. `createPlanModeConfigOption(active)`

@@ -69,6 +69,23 @@ export type LodyGoalControlResponse = {
   goal: LodyGoalSnapshot | null;
 };
 
+/**
+ * Client→agent prompt metadata that makes a prompt carry a goal action instead
+ * of user-visible command text.
+ *
+ * This is the general channel: any advertised action can travel here, and an
+ * action that starts work (`set`, `resume`) MUST, because ACP v1 gives a client
+ * exactly one way to own running work — its own prompt. A prompt carrying this
+ * metadata applies the action first and then stays open for the goal's turns,
+ * so the agent never has to start a turn nobody asked for.
+ *
+ * The prompt's content blocks are a fallback the agent may send when the action
+ * started no native turn; agents that need no fallback ignore them.
+ */
+export type LodyGoalPromptControl =
+  | { version: 1; action: 'set'; objective: string }
+  | { version: 1; action: 'pause' | 'resume' | 'clear' };
+
 export type LodySteerPromptMeta = {
   id: string;
 };
@@ -141,7 +158,10 @@ export type LodySessionMeta = {
   toolName?: string;
   activity?: LodyActivityMeta;
   task?: LodyTaskMeta;
+  /** Agent→client goal snapshot published on session updates. */
   goal?: LodyGoalSnapshot | null;
+  /** Client→agent goal action carried by `session/prompt`. */
+  goalControl?: LodyGoalPromptControl;
   notice?: LodyNotice;
   titleSource?: 'explicit' | 'generated' | 'fallback' | 'unset';
   messagePhase?: 'commentary' | 'final_answer';
