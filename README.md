@@ -57,3 +57,24 @@ time-bounded.
 `LODY_TOOL_NAMES` defines the stable identities for tool flows that Lody treats
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
+
+## Logical local project identity
+
+An agent advertising `worktreeProject: { version: 1 }` accepts
+`_meta.lody.worktreeProject: { version: 1, originProjectPath: "/absolute/project" }`
+on `session/new`, `session/load`, `session/resume`, and `session/fork`.
+`LodyWorktreeProject` defines the payload. The client resolves the original local
+project root on the agent host; ACP `cwd` remains the actual execution directory,
+which may be a worktree. Only send this extension after capability negotiation.
+
+The adapter resolves or creates the provider's project identity for that root.
+New sessions and fork targets use the requested project. Load/resume fills an
+unassigned session and preserves an existing assignment. Omission preserves
+ordinary provider behavior and never clears an assignment. An agent that accepts
+the extension must report an invalid or unresolvable project instead of silently
+claiming success without the requested association.
+
+Project identity does not grant directory access, add workspace roots, change
+`cwd`, or transfer worktree creation/cleanup ownership to the provider. It does
+not change the standard `session/list.cwd` filter or promise a provider-specific
+worktree badge. Project-wide catalog queries are a separate extension concern.
