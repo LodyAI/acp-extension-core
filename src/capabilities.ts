@@ -53,4 +53,5 @@ export type LodyExtensionCapabilities = {
   goal?: LodyGoalCapability;
   compaction?: LodyVersionOneCapability;
   sessionHistory?: LodyVersionOneCapability;
+  worktreeProject?: LodyVersionOneCapability;
 };

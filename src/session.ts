@@ -151,7 +151,15 @@ export type LodyNotice = {
   source?: string;
 };
 
+/** Logical local project identity; ACP cwd remains the actual execution directory. */
+export type LodyWorktreeProject = {
+  version: 1;
+  /** Absolute project root on the agent host, including when cwd is a worktree. */
+  originProjectPath: string;
+};
+
 export type LodySessionMeta = {
+  worktreeProject?: LodyWorktreeProject;
   turnId?: string;
   forkAtTurn?: { version: 1; turnId?: string };
   steer?: LodySteerPromptMeta;
