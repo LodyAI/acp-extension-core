@@ -9,13 +9,13 @@ const row = (inputTokens, costUSD) => ({
   ...(costUSD === undefined ? {} : { costUSD }),
 });
 
-test('empty and unknown rows do not claim free usage', () => {
+await test('empty and unknown rows do not claim free usage', () => {
   assert.equal(sumModelUsage({}).costUSD, undefined);
   assert.equal(sumModelUsage({ a: row(10, 0), b: row(20) }).costUSD, undefined);
   assert.equal(sumModelUsage({ a: row(0, 0) }).costUSD, 0);
 });
 
-test('cumulative snapshots and delta account each operation once across models', () => {
+await test('cumulative snapshots and delta account each operation once across models', () => {
   const ledger = new SessionUsageAccumulator();
   const first = ledger.update('s', '1', { a: row(100, 0.1) });
   first.modelUsage.a.inputTokens = 999;
@@ -27,7 +27,7 @@ test('cumulative snapshots and delta account each operation once across models',
   assert.ok(Math.abs(next.modelUsage.a.costUSD - 0.3) < 1e-12);
 });
 
-test('incomplete-first can be corrected; unknown cost is never zero', () => {
+await test('incomplete-first can be corrected; unknown cost is never zero', () => {
   const ledger = new SessionUsageAccumulator();
   ledger.update('s', '1', { a: row(100) });
   const corrected = ledger.update('s', '1', { a: row(150, 0.2) });
