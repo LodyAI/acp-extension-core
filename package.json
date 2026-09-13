@@ -1,6 +1,6 @@
 {
   "name": "acp-extension-core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -17,6 +17,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "test": "npm run build && node --test test/*.test.mjs",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepare": "npm run build"

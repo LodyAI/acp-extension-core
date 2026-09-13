@@ -58,15 +58,34 @@ time-bounded.
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
 
+## Usage accounting
+
+`SessionUsageUpdate` keeps the latest operation in `usage`, cumulative per-model
+totals in `modelUsage`, and optionally the newly accounted contribution in `delta`
+(`usage` plus `modelUsage`). Delta is already included in the cumulative snapshot;
+never add both. Legacy producers may omit delta and may use different top-level
+usage scopes; accounting consumers use `modelUsage`.
+
+All token buckets are disjoint. Missing cost means unknown, not free. Cost is USD,
+possibly an adapter's documented estimate rather than a provider invoice.
+`SessionUsageAccumulator` merges repeated operation IDs monotonically, including
+late completeness corrections, and returns detached snapshots. Keep it for the
+whole ACP accounting lifetime; replay must not contribute and compaction must not
+reset it. A process restart requires restored baselines or a new consumer accounting
+identity. The helper stores IDs/counters only and is not a durable billing ledger.
+
+Run `npm test` for synthetic accounting tests. Core 0.1.5 must be published before
+releasing consumers of the new runtime helper.
+
 ## Goal control
 
 A goal is durable session state, not a running prompt. Its two halves travel on
 different transports because they need different things from ACP v1:
 
-| Transport                       | Actions                    | Property                                    |
-| ------------------------------- | -------------------------- | ------------------------------------------- |
-| `_lody/session/goal` request    | status-only actions        | Never starts a turn; works mid-prompt       |
-| `prompt._meta.lody.goalControl` | any advertised action      | Runs inside the prompt the client owns      |
+| Transport                       | Actions               | Property                               |
+| ------------------------------- | --------------------- | -------------------------------------- |
+| `_lody/session/goal` request    | status-only actions   | Never starts a turn; works mid-prompt  |
+| `prompt._meta.lody.goalControl` | any advertised action | Runs inside the prompt the client owns |
 
 The request exists for `pause` and `clear`: an active goal keeps a prompt open
 across the agent's own continuations, so a client that could only speak through
