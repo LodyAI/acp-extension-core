@@ -1,12 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SessionUsageAccumulator } from '../dist/usage.js';
+import { SessionUsageAccumulator, sumModelUsage } from '../dist/usage.js';
 
 const row = (inputTokens, costUSD) => ({
   inputTokens,
   outputTokens: 10,
   cacheReadInputTokens: 20,
   ...(costUSD === undefined ? {} : { costUSD }),
+});
+
+test('empty and unknown rows do not claim free usage', () => {
+  assert.equal(sumModelUsage({}).costUSD, undefined);
+  assert.equal(sumModelUsage({ a: row(10, 0), b: row(20) }).costUSD, undefined);
+  assert.equal(sumModelUsage({ a: row(0, 0) }).costUSD, 0);
 });
 
 test('cumulative snapshots and delta account each operation once across models', () => {

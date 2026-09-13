@@ -68,6 +68,7 @@ usage scopes; accounting consumers use `modelUsage`.
 
 All token buckets are disjoint. Missing cost means unknown, not free. Cost is USD,
 possibly an adapter's documented estimate rather than a provider invoice.
+An empty aggregate has no reported cost; it does not imply zero-dollar usage.
 `SessionUsageAccumulator` merges repeated operation IDs monotonically, including
 late completeness corrections, and returns detached snapshots. Keep it for the
 whole ACP accounting lifetime; replay must not contribute and compaction must not

@@ -53,7 +53,7 @@ export function sumModelUsage(rows: Record<string, ModelUsage>): ModelUsage {
   for (const row of values) {
     for (const key of counters) result[key] = (result[key] ?? 0) + (row[key] ?? 0);
   }
-  if (values.every((row) => row.costUSD !== undefined)) {
+  if (values.length > 0 && values.every((row) => row.costUSD !== undefined)) {
     result.costUSD = values.reduce((sum, row) => sum + (row.costUSD ?? 0), 0);
   }
   return result;
