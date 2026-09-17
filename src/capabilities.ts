@@ -2,6 +2,17 @@ export type LodyVersionOneCapability = {
   version: 1;
 };
 
+/** Client support for Core semantics layered on standard ACP form elicitation. */
+export type LodyElicitationCapability = LodyVersionOneCapability & {
+  /** Preserve a selection and its optional, separately keyed note end to end. */
+  answerNotes?: true;
+};
+
+/** Advertised under InitializeRequest.clientCapabilities._meta.lody. */
+export type LodyClientExtensionCapabilities = {
+  elicitation?: LodyElicitationCapability;
+};
+
 export type LodySteeringCapability = LodyVersionOneCapability & {
   transport: 'request' | 'prompt';
   upstreamTurn: 'same' | 'handoff';

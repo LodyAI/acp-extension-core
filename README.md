@@ -10,7 +10,8 @@ Provider-neutral contracts for Lody capabilities that are not part of ACP.
 - Put Lody semantics on standard ACP messages under `_meta.lody.<feature>`.
 - Advertise every optional feature under
   `InitializeResponse.agentCapabilities._meta.lody`, with an independent
-  integer `version`.
+  integer `version`. Client-side extensions are advertised under
+  `InitializeRequest.clientCapabilities._meta.lody` instead.
 - Use the `_lody/...` JSON-RPC namespace only when ACP has no equivalent
   request or notification.
 - All absolute protocol timestamps are Unix epoch seconds and name that unit
@@ -57,6 +58,73 @@ time-bounded.
 `LODY_TOOL_NAMES` defines the stable identities for tool flows that Lody treats
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
+
+## Elicitation answer notes (0.1.6)
+
+`customAnswerFor` still means an alternative answer that **replaces** the
+referenced question's selection. Do not reinterpret existing version 1 payloads.
+`noteFor` is additive: a user can choose an option and independently provide an
+optional note. Both use standard ACP `elicitation/create`; no new RPC is needed.
+
+Before sending `noteFor`, require standard ACP form support **and**
+`clientCapabilities._meta.lody.elicitation: { version: 1, answerNotes: true }`.
+`LodyClientExtensionCapabilities` types this client advertisement; it is not an
+agent capability. A client advertises it only when parsing, editing, submission,
+and persisted/read-only presentation all retain notes. An absent/unsupported
+version or absent `answerNotes` means no support. Keep the legacy custom-answer
+flow for those clients; never silently relabel a note as a replacement answer.
+
+For example, these are two properties in one form's `requestedSchema`:
+
+```json
+{
+  "approach": {
+    "type": "string",
+    "title": "Approach",
+    "description": "Which approach should we use?",
+    "enum": ["Small change", "Refactor", "None of the above"]
+  },
+  "approach_note": {
+    "type": "string",
+    "title": "Additional context",
+    "_meta": { "lody": { "elicitation": { "version": 1, "noteFor": "approach" } } }
+  }
+}
+```
+
+The main property remains in `required`; the note is not required. The explicit
+"None of the above" option, when needed, is supplied by the adapter, never
+inferred by Core. Presentation stays compatible: question `title` is the short
+header and `description` is the question text. Note `title`, `description`, and
+property-level `secret` describe the note, not the selected answer.
+
+Normalize this as a `LodyElicitationQuestion` with
+`note: { fieldId: "approach_note", title: "Additional context" }`. Selecting an
+option must not clear its note; editing the note must not activate custom-answer
+mode. Persist both values in the existing `answers` map and return them under
+the same schema property keys in ACP `content`:
+
+```json
+{ "approach": "Small change", "approach_note": "Keep the public API stable." }
+```
+
+Notes are strings, never option arrays. Omit an empty note. Cancellation and
+decline retain their ACP meaning. `LodyElicitationAnswer` stays `string | string[]`
+for backward compatibility; the note's schema narrows its value to a string.
+Adapters translate these separate fields into provider-native answers, preserving
+the choice. Provider-specific note prefixes do not belong in Core or client UI.
+Read-only presentation must retain notes and mask secret notes independently.
+
+Use distinct, nonempty question and note keys, including when user-supplied ids
+already end in `_note`. A note must reference an existing question in the same
+schema and must not also declare `customAnswerFor`. Permit at most one note per
+question; no self-reference, reference chains, or references to custom-answer
+fields. Consumers must reject malformed associations rather than overwrite or
+reinterpret another answer. These are wire validation rules, not runtime
+validation supplied by this type-only contract.
+
+Publish Core 0.1.6 before releasing consumers of the new types. Updating Core
+alone does not enable note support in an adapter or client.
 
 ## Usage accounting
 
