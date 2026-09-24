@@ -59,6 +59,31 @@ time-bounded.
 specially. Adapters map provider-native names to these values; consumers never
 infer behavior from a human-facing tool title.
 
+## Automatic session titles
+
+Advertise `agentCapabilities._meta.lody.sessionTitle: { version: 1 }` when the
+adapter owns automatic title generation. The client can then skip its separate
+title-generation process. This is a push contract, with no new request method:
+use the existing ACP `session/update` callback after generating the title.
+
+```json
+{
+  "sessionId": "session-id",
+  "update": {
+    "sessionUpdate": "session_info_update",
+    "title": "Fix login redirect",
+    "_meta": { "lody": { "titleSource": "generated" } }
+  }
+}
+```
+
+Use `generated` for model-generated titles and `explicit` for deliberate names.
+`fallback` (for example a truncated first prompt) and `unset` are not authoritative.
+Version 1 requires tagged titles; advertising support does not make untagged
+previews trustworthy. Emit updates for the corresponding ACP session only.
+Generation is best effort: failure leaves the client's draft title and does not
+request a second generator. Clients must preserve titles their users set.
+
 ## Elicitation answer notes (0.1.6)
 
 `customAnswerFor` still means an alternative answer that **replaces** the

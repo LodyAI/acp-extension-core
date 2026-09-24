@@ -55,6 +55,8 @@ export type LodyRateLimitsCapability = LodyVersionOneCapability & {
 };
 
 export type LodyExtensionCapabilities = {
+  /** Owns title generation; pushes tagged session_info_update titles without a client request. */
+  sessionTitle?: LodyVersionOneCapability;
   usage?: LodyVersionOneCapability;
   rateLimits?: LodyRateLimitsCapability;
   forkAtTurn?: LodyVersionOneCapability;
