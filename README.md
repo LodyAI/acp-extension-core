@@ -159,6 +159,13 @@ totals in `modelUsage`, and optionally the newly accounted contribution in `delt
 never add both. Legacy producers may omit delta and may use different top-level
 usage scopes; accounting consumers use `modelUsage`.
 
+Adapters whose cumulative counters cannot survive a restart should scope each
+update with `_meta.lody.usageScopeId`. `modelUsage` is then cumulative only
+within that scope; consumers account every scope independently and sum them. A
+scope id is unique within the ACP session and never reused, so a restarted
+adapter starts a new scope instead of re-entering an old one from zero. Prefer a
+native identity that already exists, such as a turn or SDK result id.
+
 All token buckets are disjoint. Missing cost means unknown, not free. Cost is USD,
 possibly an adapter's documented estimate rather than a provider invoice.
 An empty aggregate has no reported cost; it does not imply zero-dollar usage.
@@ -167,6 +174,8 @@ late completeness corrections, and returns detached snapshots. Keep it for the
 whole ACP accounting lifetime; replay must not contribute and compaction must not
 reset it. A process restart requires restored baselines or a new consumer accounting
 identity. The helper stores IDs/counters only and is not a durable billing ledger.
+Each instance scopes its updates with its own random `usageScopeId`, so a
+restarted process never re-enters an earlier instance's totals.
 
 Run `npm test` for synthetic accounting tests. Core 0.1.5 must be published before
 releasing consumers of the new runtime helper.
