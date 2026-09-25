@@ -34,7 +34,18 @@ export type SessionUsageUpdate = {
    * ledger: persist/reconcile cumulative modelUsage, not replayed deltas.
    * Late completion can add a correction; unknown delta cost stays omitted. */
   delta?: { usage: ModelUsage; modelUsage: Record<string, ModelUsage> };
+  _meta?: { lody?: SessionUsageScopeMeta };
 };
+
+/** Optional accounting scope. When present, `modelUsage` is cumulative only
+ * within this scope (for example one native turn or one SDK result), and
+ * consumers account each scope independently and sum the scopes. The id must be
+ * unique within the ACP session and never reused by a later accounting lifetime,
+ * so an adapter restart cannot re-enter an old scope from zero. At most 256
+ * characters. Unscoped updates keep the session-lifetime semantics above. */
+export type SessionUsageScopeMeta = { usageScopeId: string };
+
+export const MAX_USAGE_SCOPE_ID_LENGTH = 256;
 
 const counters = [
   'inputTokens',
@@ -62,10 +73,18 @@ export function sumModelUsage(rows: Record<string, ModelUsage>): ModelUsage {
 /** Adapter-local ledger of synthetic/native operation IDs, never transcripts.
  * Repeated snapshots of one operation are merged monotonically, allowing an
  * incomplete result to be completed without counting the operation twice.
- * Keep this instance for the accounting lifetime, not one prompt. */
+ * Keep this instance for the accounting lifetime, not one prompt. Its totals are
+ * process-local, so every update is scoped by this instance's never-reused
+ * `usageScopeId`; a restarted process starts a new scope instead of re-entering
+ * the old one from zero. */
 export class SessionUsageAccumulator {
   private operations = new Map<string, Record<string, ModelUsage>>();
   private totals: Record<string, ModelUsage> = {};
+  readonly usageScopeId: string;
+
+  constructor(usageScopeId: string = globalThis.crypto.randomUUID()) {
+    this.usageScopeId = usageScopeId;
+  }
 
   update(
     sessionId: string,
@@ -109,6 +128,7 @@ export class SessionUsageAccumulator {
       usage: sumModelUsage(merged),
       modelUsage: next,
       delta: { usage: sumModelUsage(delta), modelUsage: delta },
+      _meta: { lody: { usageScopeId: this.usageScopeId } },
     });
   }
 }

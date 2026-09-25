@@ -10,6 +10,8 @@
 - Usage accounting uses cumulative `modelUsage` and optional already-included
   `delta`; never add both. Keep token buckets disjoint and unknown cost omitted.
   Adapters own deduplication/baselines; the shared accumulator is process-local.
+  Counters that restart with the process must be scoped by a never-reused
+  `_meta.lody.usageScopeId`; consumers sum scopes, never subtract across them.
 - `worktreeProject` is logical identity only: never change ACP cwd, permissions,
   workspace roots, or worktree lifecycle ownership to implement project grouping.
 
