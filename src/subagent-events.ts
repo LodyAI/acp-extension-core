@@ -112,7 +112,7 @@ export function isLodySubagentOutput(v: unknown): v is LodySubagentOutput {
         && optional(v, ['title'], x => x === null || text(x))
         && optional(v, ['status'], x => x === null || member(x, ['pending', 'in_progress', 'completed', 'failed']))
         && optional(v, ['kind'], x => x === null || member(x, ['read', 'edit', 'delete', 'move', 'search', 'execute', 'think', 'fetch', 'switch_mode', 'other']))
-        && optional(v, ['locations'], x => x === null || Array.isArray(x) && x.every(l => record(l) && meta(l) && text(l['path']) && optional(l, ['line'], nullable(x => number(x) && Number.isSafeInteger(x)))))
+        && optional(v, ['locations'], x => x === null || Array.isArray(x) && x.every(l => record(l) && meta(l) && text(l['path']) && optional(l, ['line'], nullable(line => number(line) && Number.isSafeInteger(line)))))
         && optional(v, ['content'], x => x === null || Array.isArray(x) && x.every(c => record(c) && meta(c) && (
           c['type'] === 'content' && content(c['content']) || c['type'] === 'terminal' && text(c['terminalId'])
           || c['type'] === 'diff' && text(c['path']) && text(c['newText']) && optional(c, ['oldText'], nullable(text)))));
