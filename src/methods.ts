@@ -1,4 +1,7 @@
+import type { LodySubagentEvent } from './subagent-events.js';
+
 export const LODY_EXTENSION_METHODS = {
+  subagentEvent: '_lody/subagents/event',
   sessionUsageUpdate: '_lody/session/usage_update',
   rateLimitsGet: '_lody/rate_limits/get',
   rateLimitsUpdate: '_lody/rate_limits/update',
@@ -46,6 +49,7 @@ export type LodyExtensionRequestMap<TPrompt = unknown> = {
 };
 
 export type LodyExtensionNotificationMap = {
+  [LODY_EXTENSION_METHODS.subagentEvent]: LodySubagentEvent;
   [LODY_EXTENSION_METHODS.sessionUsageUpdate]: SessionUsageUpdate;
   [LODY_EXTENSION_METHODS.rateLimitsUpdate]: RateLimitsUpdate;
   [LODY_EXTENSION_METHODS.sessionSteerApplied]: LodySteerApplied;
