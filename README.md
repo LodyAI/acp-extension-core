@@ -2,6 +2,24 @@
 
 Provider-neutral contracts for Lody capabilities that are not part of ACP.
 
+## Subagent execution events
+
+Clients and agents opt in independently with `_meta.lody.subagentEvents: {version: 1}`.
+After bilateral negotiation, `_lody/subagents/event` carries `LodySubagentEvent`:
+a root `sessionId`, an opaque execution `runId`, and a snapshot, sparse absolute
+progress observation, or one of the five ACP output variants (text, thought,
+tool call, tool update, plan). `isLodySubagentEvent` validates this wire boundary.
+The selected ACP content guards follow the SDK's public schema and run without
+dynamic code generation, including in CSP-restricted renderers.
+
+Snapshots replace known task metadata. Output is delivered in connection order;
+there are no sequence numbers, replay guarantees, or cross-reconnect deduplication.
+Lost observation is `unknown` with `outputIncomplete: true`, not execution failure.
+Run IDs are separate from reusable native agent/thread IDs. Progress tokens are
+display observations and never usage accounting input. Existing `subagents` v1
+list/output/cancel capabilities remain separate; controls must only be shown when
+the run actually supports them.
+
 ## Design rules
 
 - Use standard ACP whenever it can carry the behavior: `session/fork`,
