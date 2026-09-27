@@ -23,6 +23,9 @@
     "prepare": "npm run build"
   },
   "sideEffects": false,
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^1.4.0"
+  },
   "devDependencies": {
     "typescript": "^5.9.3"
   }

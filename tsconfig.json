@@ -6,7 +6,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "ESNext.Disposable"]
   },
   "include": ["src/**/*.ts"]
 }
