@@ -19,8 +19,7 @@ export class LodySubagentEmitter {
   }
 
   async start(nativeId: string, snapshot: LodySubagentSnapshot): Promise<void> {
-    const previous = this.get(nativeId);
-    if (previous && this.live(nativeId)) return;
+    if (this.live(nativeId)) return;
     const run = { runId: this.newId(), snapshot };
     this.runs.set(nativeId, run);
     await this.send({
