@@ -20,6 +20,11 @@ display observations and never usage accounting input. Existing `subagents` v1
 list/output/cancel capabilities remain separate; controls must only be shown when
 the run actually supports them.
 
+`LodySubagentEmitter` is an optional per-root-activation adapter helper. It maps
+native execution identifiers to fresh opaque run IDs, preserves partial snapshots,
+drops output after termination, and marks disconnected executions unknown/incomplete.
+Callers own negotiation, ordering, native ancestry and subscription lifetimes.
+
 ## Design rules
 
 - Use standard ACP whenever it can carry the behavior: `session/fork`,

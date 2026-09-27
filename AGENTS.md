@@ -17,3 +17,6 @@
 
 - Independent planning uses the boolean `plan_mode` config option from this package.
   It does not select sandbox or approval policy; advertise only when supported.
+- Subagent emitters require caller-owned negotiation, native ancestry validation and
+  serialized delivery. Run IDs identify executions, not reusable native task IDs;
+  progress counters never replace usage accounting.

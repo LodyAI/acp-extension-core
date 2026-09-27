@@ -6,3 +6,4 @@ export * from './session.js';
 export * from './usage.js';
 export * from './plan-mode.js';
 export * from './subagent-events.js';
+export * from './subagent-emitter.js';
