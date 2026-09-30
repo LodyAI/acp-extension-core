@@ -1,3 +1,11 @@
+import type {
+  LodyMcpAppLoadRequest,
+  LodyMcpAppLoadResponse,
+  LodyMcpAppResourceReadRequest,
+  LodyMcpAppResourceReadResponse,
+  LodyMcpAppToolCallRequest,
+  LodyMcpAppToolCallResponse,
+} from './mcp-apps.js';
 import type { LodySubagentEvent } from './subagent-events.js';
 
 export const LODY_EXTENSION_METHODS = {
@@ -12,6 +20,9 @@ export const LODY_EXTENSION_METHODS = {
   subagentsList: '_lody/subagents/list',
   subagentsCancel: '_lody/subagents/cancel',
   subagentsOutput: '_lody/subagents/output',
+  mcpAppsLoad: '_lody/mcp_apps/load',
+  mcpAppsResourceRead: '_lody/mcp_apps/resource/read',
+  mcpAppsToolCall: '_lody/mcp_apps/tool/call',
 } as const;
 
 export type LodyExtensionMethod =
@@ -45,6 +56,18 @@ export type LodyExtensionRequestMap<TPrompt = unknown> = {
   [LODY_EXTENSION_METHODS.subagentsOutput]: {
     params: LodySubagentOutputRequest;
     result: LodySubagentOutputResponse;
+  };
+  [LODY_EXTENSION_METHODS.mcpAppsLoad]: {
+    params: LodyMcpAppLoadRequest;
+    result: LodyMcpAppLoadResponse;
+  };
+  [LODY_EXTENSION_METHODS.mcpAppsResourceRead]: {
+    params: LodyMcpAppResourceReadRequest;
+    result: LodyMcpAppResourceReadResponse;
+  };
+  [LODY_EXTENSION_METHODS.mcpAppsToolCall]: {
+    params: LodyMcpAppToolCallRequest;
+    result: LodyMcpAppToolCallResponse;
   };
 };
 
