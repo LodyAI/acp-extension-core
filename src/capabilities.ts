@@ -6,6 +6,8 @@ export type LodyVersionOneCapability = {
 export type LodyElicitationCapability = LodyVersionOneCapability & {
   /** Preserve a selection and its optional, separately keyed note end to end. */
   answerNotes?: true;
+  /** Render inert component documents and return revision-bound input events. */
+  components?: { version: 1 };
 };
 
 /** Advertised under InitializeRequest.clientCapabilities._meta.lody. */
