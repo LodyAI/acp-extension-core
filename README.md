@@ -25,6 +25,25 @@ native execution identifiers to fresh opaque run IDs, preserves partial snapshot
 drops output after termination, and marks disconnected executions unknown/incomplete.
 Callers own negotiation, ordering, native ancestry and subscription lifetimes.
 
+## GUI components
+
+Clients supporting inert GUI documents advertise
+`_meta.lody.elicitation: {version: 1, components: {version: 1}}` alongside
+standard form elicitation. Agents then attach a `LodyComponentDocument` under
+the request's `_meta.lody.elicitation.component`. The form schema has exactly
+one required string property, `event`. An accepted answer serializes a
+`LodyComponentEvent` into that property; cancellation uses standard ACP cancel.
+
+Documents contain text, buttons, and text inputs, with an optional local palette
+and focused keybindings. They carry no HTML, script, executable URLs, or global
+client settings. The agent checks component ID and revision before native input
+delivery. Each interaction produces the next revision through another form;
+there is no background animation or unsolicited update channel in version 1.
+Consumers decline unsupported versions, malformed controls, invalid palettes,
+and incompatible event schemas. Lody bounds documents to 128 KiB of UTF-8 JSON,
+256 nodes, 128 bindings, and 4,096 characters per input. Native adapters own
+rendering, cancellation, disposal, and local session identity.
+
 ## Design rules
 
 - Use standard ACP whenever it can carry the behavior: `session/fork`,

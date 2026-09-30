@@ -7,6 +7,8 @@
   Equal durations, utilization, or reset times do not make windows duplicates.
   Preserve compatibility with version 1 payloads that omit the label.
 - Run `npm run build` and `npm run typecheck` when changing contracts.
+- GUI components are negotiated inert data on standard form elicitation. Bind
+  answers to component ID/revision; palettes and shortcuts remain component-local.
 - Usage accounting uses cumulative `modelUsage` and optional already-included
   `delta`; never add both. Keep token buckets disjoint and unknown cost omitted.
   Adapters own deduplication/baselines; the shared accumulator is process-local.

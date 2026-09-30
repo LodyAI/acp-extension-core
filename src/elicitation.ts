@@ -1,3 +1,5 @@
+import type { LodyComponentDocument } from './components.js';
+
 /**
  * Metadata for ACP form elicitation details that JSON Schema cannot express.
  * The same shape is used at request, property, and enum-option scope; consumers
@@ -35,6 +37,8 @@ export type LodyElicitationAnswer = string | string[];
 
 export type LodyElicitationMeta = {
   version: 1;
+  /** Request scope only; requires negotiated elicitation.components v1. */
+  component?: LodyComponentDocument;
   autoResolveAfterSeconds?: number | null;
   autoResolveAtEpochSeconds?: number;
   /** Property scope: an alternative answer replacing the referenced selection. */
