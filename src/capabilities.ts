@@ -12,6 +12,8 @@ export type LodyElicitationCapability = LodyVersionOneCapability & {
 export type LodyClientExtensionCapabilities = {
   subagentEvents?: LodyVersionOneCapability;
   elicitation?: LodyElicitationCapability;
+  /** Client can host MCP Apps views; agents emit `_meta.lody.mcpApp` only when set. */
+  mcpApps?: LodyVersionOneCapability;
 };
 
 export type LodySteeringCapability = LodyVersionOneCapability & {
@@ -69,4 +71,6 @@ export type LodyExtensionCapabilities = {
   compaction?: LodyVersionOneCapability;
   sessionHistory?: LodyVersionOneCapability;
   worktreeProject?: LodyVersionOneCapability;
+  /** Serves `_lody/mcp_apps/*` for tool calls carrying `_meta.lody.mcpApp`. */
+  mcpApps?: LodyVersionOneCapability;
 };

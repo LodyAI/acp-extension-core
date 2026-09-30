@@ -115,6 +115,7 @@ When ACP already provides a suitable message, the extension rides on it and no n
 | `compaction` | Context compaction and retry, reported as a tool lifecycle tagged with `_meta.lody.activity` (`kind` is `context_compaction` or `retry`). |
 | `sessionHistory` | Accepts [`_lody/session/history/read`](#custom-_lody-methods) for one session. The response body is empty. |
 | `worktreeProject` | On `session/new`, `session/load`, `session/resume`, and `session/fork`, `_meta.lody.worktreeProject` names the original project root (`originProjectPath`). ACP `cwd` remains the real execution directory. Omitting the field leaves the provider's ordinary project assignment unchanged. |
+| `mcpApps` | After **both** peers advertise it, a `tool_call` whose tool declares a `ui://` [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) resource carries `_meta.lody.mcpApp` (`LodyMcpAppToolCallMeta`). The agent keeps the MCP connection: the client fetches the originating input and result with [`_lody/mcp_apps/load`](#custom-_lody-methods), and proxies the view's `resources/read` and `tools/call` through [`_lody/mcp_apps/resource/read`](#custom-_lody-methods) and [`_lody/mcp_apps/tool/call`](#custom-_lody-methods). Every request is scoped by `toolCallId` to the originating server; the agent rejects app tool calls whose `_meta.ui.visibility` excludes `"app"`. |
 
 ### Client capabilities (`LodyClientExtensionCapabilities`)
 
@@ -122,6 +123,7 @@ When ACP already provides a suitable message, the extension rides on it and no n
 | --- | --- |
 | `subagentEvents` | The client can receive [`_lody/subagents/event`](#custom-_lody-methods). Required together with the agent flag. |
 | `elicitation` | The client preserves Lody fields on the standard `elicitation/create`. `answerNotes: true` means a selected option and its separate note both survive editing, submission, and read-only display. `noteFor` adds a note; `customAnswerFor` replaces the referenced answer. The two do not combine. |
+| `mcpApps` | The client can host MCP Apps views. Agents emit `_meta.lody.mcpApp` only when this is set. Required together with the agent flag. |
 
 ### Standard ACP configuration
 
@@ -158,6 +160,9 @@ Requests:
 | `_lody/subagents/list` | `sessionId`, optional `activeOnly`. | `{ tasks }`. |
 | `_lody/subagents/cancel` | `sessionId`, `taskId`, optional `reason`. | An empty object. |
 | `_lody/subagents/output` | `sessionId`, `taskId`, optional `tail`. | `{ output }`. |
+| `_lody/mcp_apps/load` | `sessionId`, `toolCallId`. | `{ app, toolInput, toolResult }`; `toolResult` is `null` until the originating call completes. |
+| `_lody/mcp_apps/resource/read` | `sessionId`, `toolCallId`, `uri`. | The MCP `resources/read` result from the originating server. |
+| `_lody/mcp_apps/tool/call` | `sessionId`, `toolCallId`, `name`, optional `arguments`. | The MCP `tools/call` result from the originating server. |
 
 Notifications (agent to client):
 
@@ -179,6 +184,7 @@ Each of these fields lives under `_meta.lody` on a message ACP already defines.
 | `task` | `tool_call`, `tool_call_update` | Subagent, background, or scheduled lifecycle (`LodyTaskMeta`). |
 | `activity` | `tool_call`, `tool_call_update` | Compaction or retry (`LodyActivityMeta`). |
 | `toolName` | `tool_call`, `tool_call_update` | A canonical ID from `LODY_TOOL_NAMES`. |
+| `mcpApp` | `tool_call` | The MCP Apps view for this call (`LodyMcpAppToolCallMeta`). |
 | `titleSource` | `session_info_update` | `explicit`, `generated`, `fallback`, or `unset`. |
 | `goal` | session update | The agent-published `LodyGoalSnapshot`, or `null`. |
 | `goalControl` | `session/prompt` | A client goal action. The prompt text is a fallback for when the action starts no native turn. |

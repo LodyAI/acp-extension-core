@@ -115,6 +115,7 @@ npm test           # 先构建，再运行契约测试
 | `compaction` | 上下文压缩与重试，以工具调用生命周期上报，并带 `_meta.lody.activity`（`kind` 为 `context_compaction` 或 `retry`）。 |
 | `sessionHistory` | 接受针对单个会话的 [`_lody/session/history/read`](#自定义-_lody-方法)。响应体为空。 |
 | `worktreeProject` | 在 `session/new`、`session/load`、`session/resume`、`session/fork` 上，`_meta.lody.worktreeProject` 指明原始项目根（`originProjectPath`）。ACP `cwd` 仍然是实际执行目录。省略该字段则保持提供方原有的项目归属不变。 |
+| `mcpApps` | **双方**都声明后，若工具声明了 `ui://` [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) 资源，其 `tool_call` 会携带 `_meta.lody.mcpApp`（`LodyMcpAppToolCallMeta`）。MCP 连接始终由 Agent 持有：客户端通过 [`_lody/mcp_apps/load`](#自定义-_lody-方法) 获取原始调用的输入与结果，并通过 [`_lody/mcp_apps/resource/read`](#自定义-_lody-方法) 和 [`_lody/mcp_apps/tool/call`](#自定义-_lody-方法) 代理视图的 `resources/read` 与 `tools/call`。每个请求都以 `toolCallId` 限定在原始服务器上；对于 `_meta.ui.visibility` 不包含 `"app"` 的工具，Agent 拒绝来自视图的调用。 |
 
 ### 客户端能力（`LodyClientExtensionCapabilities`）
 
@@ -122,6 +123,7 @@ npm test           # 先构建，再运行契约测试
 | --- | --- |
 | `subagentEvents` | 客户端可以接收 [`_lody/subagents/event`](#自定义-_lody-方法)。必须与 Agent 侧的声明同时存在。 |
 | `elicitation` | 客户端在标准 `elicitation/create` 上保留 Lody 字段。`answerNotes: true` 表示用户选中的选项和单独的附注在编辑、提交和只读展示中都会保留。`noteFor` 是附加说明；`customAnswerFor` 会替换所引用的答案。二者不同时使用。 |
+| `mcpApps` | 客户端可以承载 MCP Apps 视图。只有声明了它，Agent 才会发出 `_meta.lody.mcpApp`。必须与 Agent 侧的声明同时存在。 |
 
 ### 标准 ACP 配置
 
@@ -158,6 +160,9 @@ npm test           # 先构建，再运行契约测试
 | `_lody/subagents/list` | `sessionId`，可选 `activeOnly`。 | `{ tasks }`。 |
 | `_lody/subagents/cancel` | `sessionId`、`taskId`，可选 `reason`。 | 空对象。 |
 | `_lody/subagents/output` | `sessionId`、`taskId`，可选 `tail`。 | `{ output }`。 |
+| `_lody/mcp_apps/load` | `sessionId`、`toolCallId`。 | `{ app, toolInput, toolResult }`；原始调用完成前 `toolResult` 为 `null`。 |
+| `_lody/mcp_apps/resource/read` | `sessionId`、`toolCallId`、`uri`。 | 原始服务器返回的 MCP `resources/read` 结果。 |
+| `_lody/mcp_apps/tool/call` | `sessionId`、`toolCallId`、`name`，可选 `arguments`。 | 原始服务器返回的 MCP `tools/call` 结果。 |
 
 通知（Agent 到客户端）：
 
@@ -179,6 +184,7 @@ npm test           # 先构建，再运行契约测试
 | `task` | `tool_call`、`tool_call_update` | 子代理、后台或定时任务的生命周期（`LodyTaskMeta`）。 |
 | `activity` | `tool_call`、`tool_call_update` | 压缩或重试（`LodyActivityMeta`）。 |
 | `toolName` | `tool_call`、`tool_call_update` | `LODY_TOOL_NAMES` 中的稳定 id。 |
+| `mcpApp` | `tool_call` | 本次调用对应的 MCP Apps 视图（`LodyMcpAppToolCallMeta`）。 |
 | `titleSource` | `session_info_update` | `explicit`、`generated`、`fallback` 或 `unset`。 |
 | `goal` | 会话更新 | Agent 发布的 `LodyGoalSnapshot`，或 `null`。 |
 | `goalControl` | `session/prompt` | 客户端发起的目标动作。当该动作没有开启原生轮次时，prompt 正文只是后备文本。 |
