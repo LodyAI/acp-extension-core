@@ -8,8 +8,25 @@ Lody 需要对接多种 agent 运行时，而它们各自使用不同的原生�
 
 [English](README.md)
 
+## 参考实现
+
+截至 2026-10-01，[github.com/LodyAI](https://github.com/LodyAI) 下公开的 `acp-extension-*` 仓库如下。本仓库是共享契约，其余八个是提供方适配器：它们使用 ACP v1，并把自己的提供方映射到上述契约。
+
+| 仓库 | 覆盖范围 |
+| --- | --- |
+| [acp-extension-core](https://github.com/LodyAI/acp-extension-core) | 共享的 v1 类型、能力标志与 `_lody/` 方法。即本仓库。 |
+| [acp-extension-claude](https://github.com/LodyAI/acp-extension-claude) | Claude Agent SDK 的 ACP agent，包含 Lody 子代理事件。 |
+| [acp-extension-codex](https://github.com/LodyAI/acp-extension-codex) | Codex CLI / App Server 的 ACP 服务，包含 fork、steer 与 goal。 |
+| [acp-extension-devin](https://github.com/LodyAI/acp-extension-devin) | Devin 原生 `devin acp` 之前的代理，把 Devin 私有的子代理流量翻译为 Core 事件。 |
+| [acp-extension-dsh](https://github.com/LodyAI/acp-extension-dsh) | [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 ACP 会话控制：模型、权限、子代理与压缩。 |
+| [acp-extension-grok](https://github.com/LodyAI/acp-extension-grok) | 官方 Grok 运行时的 ACP 兼容适配器，包含定时任务与子代理事件。 |
+| [acp-extension-kimi](https://github.com/LodyAI/acp-extension-kimi) | 为 Lody 打包的 Kimi Code CLI。 |
+| [acp-extension-omp](https://github.com/LodyAI/acp-extension-omp) | Lody 的 Oh My Pi 适配器。 |
+| [acp-extension-pi](https://github.com/LodyAI/acp-extension-pi) | 针对固定版本官方 Pi CLI（`--mode rpc`）的 ACP 适配器。 |
+
 ## 目录
 
+- [参考实现](#参考实现)
 - [设计原则](#设计原则)
 - [开始使用](#开始使用)
 - [扩展如何协商](#扩展如何协商)
@@ -17,7 +34,6 @@ Lody 需要对接多种 agent 运行时，而它们各自使用不同的原生�
 - [自定义 `_lody/` 方法](#自定义-_lody-方法)
 - [标准 ACP 消息上的元数据](#标准-acp-消息上的元数据)
 - [共同约定](#共同约定)
-- [参考实现](#参考实现)
 - [许可证](#许可证)
 
 ## 设计原则
@@ -186,22 +202,6 @@ npm test           # 先构建，再运行契约测试
 - `worktreeProject` 不授予目录访问权限，不改变 `cwd`，也不会把工作树的创建或清理交给提供方。若接受该扩展却无法解析项目根，应返回错误。
 - Plan mode 不承诺沙箱变为只读；Claude 基于权限模式的 Plan 切换不属于本契约。
 - 适配器只发送当前版本的契约；对旧版载荷的兼容应放在消费方边界，并设定明确的退役时间。
-
-## 参考实现
-
-截至 2026-10-01，[github.com/LodyAI](https://github.com/LodyAI) 下公开的 `acp-extension-*` 仓库如下。本仓库是共享契约，其余八个是提供方适配器：它们使用 ACP v1，并把自己的提供方映射到上述契约。
-
-| 仓库 | 覆盖范围 |
-| --- | --- |
-| [acp-extension-core](https://github.com/LodyAI/acp-extension-core) | 共享的 v1 类型、能力标志与 `_lody/` 方法。即本仓库。 |
-| [acp-extension-claude](https://github.com/LodyAI/acp-extension-claude) | Claude Agent SDK 的 ACP agent，包含 Lody 子代理事件。 |
-| [acp-extension-codex](https://github.com/LodyAI/acp-extension-codex) | Codex CLI / App Server 的 ACP 服务，包含 fork、steer 与 goal。 |
-| [acp-extension-devin](https://github.com/LodyAI/acp-extension-devin) | Devin 原生 `devin acp` 之前的代理，把 Devin 私有的子代理流量翻译为 Core 事件。 |
-| [acp-extension-dsh](https://github.com/LodyAI/acp-extension-dsh) | [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 ACP 会话控制：模型、权限、子代理与压缩。 |
-| [acp-extension-grok](https://github.com/LodyAI/acp-extension-grok) | 官方 Grok 运行时的 ACP 兼容适配器，包含定时任务与子代理事件。 |
-| [acp-extension-kimi](https://github.com/LodyAI/acp-extension-kimi) | 为 Lody 打包的 Kimi Code CLI。 |
-| [acp-extension-omp](https://github.com/LodyAI/acp-extension-omp) | Lody 的 Oh My Pi 适配器。 |
-| [acp-extension-pi](https://github.com/LodyAI/acp-extension-pi) | 针对固定版本官方 Pi CLI（`--mode rpc`）的 ACP 适配器。 |
 
 ## 许可证
 

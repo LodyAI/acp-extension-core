@@ -8,8 +8,25 @@ Extensions are negotiated, not assumed. An agent advertises what it implements o
 
 [中文](README.zh.md)
 
+## Reference implementations
+
+The following public `acp-extension-*` repositories under [github.com/LodyAI](https://github.com/LodyAI) implement or consume this contract, as of 2026-10-01. This repository is the shared contract; the other eight are provider adapters that speak ACP v1 and map their provider onto the contracts above.
+
+| Repository | What it covers |
+| --- | --- |
+| [acp-extension-core](https://github.com/LodyAI/acp-extension-core) | Shared v1 types, capability flags, and `_lody/` methods. This repository. |
+| [acp-extension-claude](https://github.com/LodyAI/acp-extension-claude) | An ACP agent for the Claude Agent SDK, including Lody subagent events. |
+| [acp-extension-codex](https://github.com/LodyAI/acp-extension-codex) | An ACP server for the Codex CLI / App Server, including fork, steer, and goals. |
+| [acp-extension-devin](https://github.com/LodyAI/acp-extension-devin) | A proxy in front of Devin's native `devin acp`, translating Devin-only subagent traffic into Core events. |
+| [acp-extension-dsh](https://github.com/LodyAI/acp-extension-dsh) | ACP session controls for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): models, permissions, subagents, compaction. |
+| [acp-extension-grok](https://github.com/LodyAI/acp-extension-grok) | An ACP compatibility adapter for the official Grok runtime, including scheduled tasks and subagent events. |
+| [acp-extension-kimi](https://github.com/LodyAI/acp-extension-kimi) | The Kimi Code CLI packaged for Lody. |
+| [acp-extension-omp](https://github.com/LodyAI/acp-extension-omp) | The Oh My Pi adapter for Lody. |
+| [acp-extension-pi](https://github.com/LodyAI/acp-extension-pi) | An ACP adapter for the pinned official Pi CLI (`--mode rpc`). |
+
 ## Contents
 
+- [Reference implementations](#reference-implementations)
 - [Design principles](#design-principles)
 - [Getting started](#getting-started)
 - [How extensions are negotiated](#how-extensions-are-negotiated)
@@ -17,7 +34,6 @@ Extensions are negotiated, not assumed. An agent advertises what it implements o
 - [Custom `_lody/` methods](#custom-_lody-methods)
 - [Metadata on standard ACP messages](#metadata-on-standard-acp-messages)
 - [Shared rules](#shared-rules)
-- [Reference implementations](#reference-implementations)
 - [License](#license)
 
 ## Design principles
@@ -186,22 +202,6 @@ Each of these fields lives under `_meta.lody` on a message ACP already defines.
 - `worktreeProject` grants no directory access, does not change `cwd`, and does not move worktree creation or cleanup onto the provider. An accepted but unresolvable root is an error.
 - Plan mode does not promise a read-only sandbox. Claude's permission-mode plan switch is outside this contract.
 - Adapters emit only the current contracts. Compatibility with older payloads belongs at the consumer boundary and should be time-bounded.
-
-## Reference implementations
-
-The following public `acp-extension-*` repositories under [github.com/LodyAI](https://github.com/LodyAI) implement or consume this contract, as of 2026-10-01. This repository is the shared contract; the other eight are provider adapters that speak ACP v1 and map their provider onto the contracts above.
-
-| Repository | What it covers |
-| --- | --- |
-| [acp-extension-core](https://github.com/LodyAI/acp-extension-core) | Shared v1 types, capability flags, and `_lody/` methods. This repository. |
-| [acp-extension-claude](https://github.com/LodyAI/acp-extension-claude) | An ACP agent for the Claude Agent SDK, including Lody subagent events. |
-| [acp-extension-codex](https://github.com/LodyAI/acp-extension-codex) | An ACP server for the Codex CLI / App Server, including fork, steer, and goals. |
-| [acp-extension-devin](https://github.com/LodyAI/acp-extension-devin) | A proxy in front of Devin's native `devin acp`, translating Devin-only subagent traffic into Core events. |
-| [acp-extension-dsh](https://github.com/LodyAI/acp-extension-dsh) | ACP session controls for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): models, permissions, subagents, compaction. |
-| [acp-extension-grok](https://github.com/LodyAI/acp-extension-grok) | An ACP compatibility adapter for the official Grok runtime, including scheduled tasks and subagent events. |
-| [acp-extension-kimi](https://github.com/LodyAI/acp-extension-kimi) | The Kimi Code CLI packaged for Lody. |
-| [acp-extension-omp](https://github.com/LodyAI/acp-extension-omp) | The Oh My Pi adapter for Lody. |
-| [acp-extension-pi](https://github.com/LodyAI/acp-extension-pi) | An ACP adapter for the pinned official Pi CLI (`--mode rpc`). |
 
 ## License
 
