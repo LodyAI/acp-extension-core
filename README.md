@@ -1,270 +1,208 @@
 # ACP Extension Core
 
-Provider-neutral contracts for Lody capabilities that are not part of ACP.
+Provider-neutral contracts for the Lody extensions that sit on top of [Agent Client Protocol](https://agentclientprotocol.com/) v1.
 
-## Subagent execution events
+Lody connects to many agent runtimes, and each one speaks its own dialect. ACP covers the common core, but features such as streaming subagent execution, durable goals, token accounting, and rate limits need a shared and stable description before clients can rely on them. This package is that description: a provider adapter translates its runtime into these contracts once, and any client that has negotiated the corresponding capability can read the result without knowing which runtime produced it.
 
-Clients and agents opt in independently with `_meta.lody.subagentEvents: {version: 1}`.
-After bilateral negotiation, `_lody/subagents/event` carries `LodySubagentEvent`:
-a root `sessionId`, an opaque execution `runId`, and a snapshot, sparse absolute
-progress observation, or one of the five ACP output variants (text, thought,
-tool call, tool update, plan). `isLodySubagentEvent` validates this wire boundary.
-The selected ACP content guards follow the SDK's public schema and run without
-dynamic code generation, including in CSP-restricted renderers.
+Extensions are negotiated, not assumed. An agent advertises what it implements on `InitializeResponse.agentCapabilities._meta.lody`; a client advertises its own features on `InitializeRequest.clientCapabilities._meta.lody`. Each key carries its own `{ "version": 1 }`, and a missing key means the peer does not support that feature. Clients branch on the negotiated capability, never on which provider is behind the connection.
 
-Snapshots replace known task metadata. Output is delivered in connection order;
-there are no sequence numbers, replay guarantees, or cross-reconnect deduplication.
-Lost observation is `unknown` with `outputIncomplete: true`, not execution failure.
-Run IDs are separate from reusable native agent/thread IDs. Progress tokens are
-display observations and never usage accounting input. Existing `subagents` v1
-list/output/cancel capabilities remain separate; controls must only be shown when
-the run actually supports them.
+[中文](README.zh.md)
 
-`LodySubagentEmitter` is an optional per-root-activation adapter helper. It maps
-native execution identifiers to fresh opaque run IDs, preserves partial snapshots,
-drops output after termination, and marks disconnected executions unknown/incomplete.
-Callers own negotiation, ordering, native ancestry and subscription lifetimes.
+## Contents
 
-## Design rules
+- [Design principles](#design-principles)
+- [Getting started](#getting-started)
+- [How extensions are negotiated](#how-extensions-are-negotiated)
+- [Capability catalog](#capability-catalog)
+- [Custom `_lody/` methods](#custom-_lody-methods)
+- [Metadata on standard ACP messages](#metadata-on-standard-acp-messages)
+- [Shared rules](#shared-rules)
+- [Reference implementations](#reference-implementations)
+- [License](#license)
 
-- Use standard ACP whenever it can carry the behavior: `session/fork`,
-  `elicitation/create`, `plan_update`, `usage_update`, and normal
-  `tool_call`/`tool_call_update` lifecycle messages.
-- Put Lody semantics on standard ACP messages under `_meta.lody.<feature>`.
-- Advertise every optional feature under
-  `InitializeResponse.agentCapabilities._meta.lody`, with an independent
-  integer `version`. Client-side extensions are advertised under
-  `InitializeRequest.clientCapabilities._meta.lody` instead.
-- Use the `_lody/...` JSON-RPC namespace only when ACP has no equivalent
-  request or notification.
-- All absolute protocol timestamps are Unix epoch seconds and name that unit
-  explicitly. Relative durations also name seconds explicitly.
-- Provider adapters translate native data into these contracts. Consumers do
-  not branch on provider-specific payloads.
+## Design principles
 
-## Standard ACP envelopes
+Three placement rules, in order of preference, keep the contract small and interoperable:
 
-| Feature                                 | ACP envelope                     | Lody metadata                                                   |
-| --------------------------------------- | -------------------------------- | --------------------------------------------------------------- |
-| Fork                                    | `session/fork`                   | `_meta.lody.forkAtTurn` for an optional source turn             |
-| Ask user                                | `elicitation/create`             | `_meta.lody.elicitation` for details JSON Schema cannot express |
-| Proposed plan                           | `plan_update` / `plan_removed`   | none required                                                   |
-| Context occupancy                       | `usage_update`                   | none required                                                   |
-| Subagent/background/scheduled lifecycle | `tool_call` / `tool_call_update` | `_meta.lody.task`                                               |
-| Compaction/retry lifecycle              | `tool_call` / `tool_call_update` | `_meta.lody.activity`                                           |
-| Canonical tool identity                 | `tool_call` / `tool_call_update` | `_meta.lody.toolName`                                           |
-| Goal/notice/title/message phase         | normal session update            | `_meta.lody.<feature>`                                          |
+1. **Use standard ACP when it already fits.** `session/fork`, `elicitation/create`, `usage_update`, and the ordinary `tool_call` / `tool_call_update` lifecycle each already carry part of the behavior. Prefer them.
+2. **Attach Lody semantics to standard messages.** Where ACP has no field for something, put it under `_meta.lody.<feature>` on the message that expresses the behavior.
+3. **Add a `_lody/` method only when ACP has no equivalent.** The JSON-RPC namespace is reserved for requests and notifications that have no standard counterpart.
 
-## Custom methods
+Every feature is versioned on its own. A `{ "version": 1 }` on one capability never implies support for another.
 
-Method names and their request/response types are exported from `src/methods.ts`
-and the adjacent contract modules. `LodyExtensionRequestMap`,
-`LodyExtensionNotificationMap`, and `LodyExtensionRequestHandlers` bind every
-wire name to its payload types so adapters cannot implement a method against an
-unrelated DTO. Rate limits support both proactive
-`_lody/rate_limits/update` notifications and independent
-`_lody/rate_limits/get` queries. The query is not session-bound; `sessionId`,
-`accountId`, and `modelId` are optional filters.
+## Getting started
 
-Each rate limit's `windows` is the complete current list of concurrent quota
-constraints. A window may carry a provider-supplied `label` such as `Fable`,
-displayed alongside its duration. Multiple windows may have the same duration:
-an all-model weekly quota and a model weekly sub-cap remain separate meters,
-not additive allowances. Labels are display-only; do not use them for routing
-or deduplicate windows by duration, utilization, or reset time. This optional
-field is additive to the version 1 rate-limit contract.
+```bash
+npm install acp-extension-core
+```
 
-Adapters should emit only the current contracts. Compatibility with payloads
-that predate this package belongs at the consumer boundary and should be
-time-bounded.
+The package is mostly TypeScript types: capability shapes, the request and notification maps, and the metadata interfaces that define the contract. It depends on [`@agentclientprotocol/sdk`](https://www.npmjs.com/package/@agentclientprotocol/sdk) for the ACP wire types, and also ships a few runtime helpers:
 
-`LODY_TOOL_NAMES` defines the stable identities for tool flows that Lody treats
-specially. Adapters map provider-native names to these values; consumers never
-infer behavior from a human-facing tool title.
+- `SessionUsageAccumulator` — merges repeated usage snapshots into cumulative per-model totals plus a per-update delta.
+- `LodySubagentEmitter` — maps native subagent executions onto opaque run IDs and emits ordered `_lody/subagents/event` messages.
+- `createPlanModeConfigOption` — builds the standard `plan_mode` ACP config option.
+- `isLodySubagentEvent`, `isLodySubagentSnapshot`, `isLodySubagentOutput` — guards for validating payloads at the wire boundary.
+- `supportsLodySubagentEvents` — reads the negotiated `subagentEvents` flag from an ACP capabilities object.
 
-## Automatic session titles
+A typical consumer checks the negotiated capability first, then routes by the exported method name and validates at the boundary:
 
-Advertise `agentCapabilities._meta.lody.sessionTitle: { version: 1 }` when the
-adapter owns automatic title generation. The client can then skip its separate
-title-generation process. This is a push contract, with no new request method:
-use the existing ACP `session/update` callback after generating the title.
+```ts
+import {
+  LODY_EXTENSION_METHODS,
+  isLodySubagentEvent,
+  supportsLodySubagentEvents,
+} from 'acp-extension-core';
 
-```json
-{
-  "sessionId": "session-id",
-  "update": {
-    "sessionUpdate": "session_info_update",
-    "title": "Fix login redirect",
-    "_meta": { "lody": { "titleSource": "generated" } }
-  }
+if (supportsLodySubagentEvents(agentCapabilities)) {
+  onNotification(LODY_EXTENSION_METHODS.subagentEvent, (payload) => {
+    if (!isLodySubagentEvent(payload)) return;
+    // payload.runId is opaque; payload holds snapshot, progress, or output.
+  });
 }
 ```
 
-Use `generated` for model-generated titles and `explicit` for deliberate names.
-`fallback` (for example a truncated first prompt) and `unset` are not authoritative.
-Version 1 requires tagged titles; advertising support does not make untagged
-previews trustworthy. Emit updates for the corresponding ACP session only.
-Generation is best effort: failure leaves the client's draft title and does not
-request a second generator. Clients must preserve titles their users set.
+To work on the package itself:
 
-## Elicitation answer notes (0.1.6)
-
-`customAnswerFor` still means an alternative answer that **replaces** the
-referenced question's selection. Do not reinterpret existing version 1 payloads.
-`noteFor` is additive: a user can choose an option and independently provide an
-optional note. Both use standard ACP `elicitation/create`; no new RPC is needed.
-
-Before sending `noteFor`, require standard ACP form support **and**
-`clientCapabilities._meta.lody.elicitation: { version: 1, answerNotes: true }`.
-`LodyClientExtensionCapabilities` types this client advertisement; it is not an
-agent capability. A client advertises it only when parsing, editing, submission,
-and persisted/read-only presentation all retain notes. An absent/unsupported
-version or absent `answerNotes` means no support. Keep the legacy custom-answer
-flow for those clients; never silently relabel a note as a replacement answer.
-
-For example, these are two properties in one form's `requestedSchema`:
-
-```json
-{
-  "approach": {
-    "type": "string",
-    "title": "Approach",
-    "description": "Which approach should we use?",
-    "enum": ["Small change", "Refactor", "None of the above"]
-  },
-  "approach_note": {
-    "type": "string",
-    "title": "Additional context",
-    "_meta": { "lody": { "elicitation": { "version": 1, "noteFor": "approach" } } }
-  }
-}
+```bash
+npm install
+npm run build      # emit dist/
+npm run typecheck  # type-check without emitting
+npm test           # build, then run the contract tests
 ```
 
-The main property remains in `required`; the note is not required. The explicit
-"None of the above" option, when needed, is supplied by the adapter, never
-inferred by Core. Presentation stays compatible: question `title` is the short
-header and `description` is the question text. Note `title`, `description`, and
-property-level `secret` describe the note, not the selected answer.
+## How extensions are negotiated
 
-Normalize this as a `LodyElicitationQuestion` with
-`note: { fieldId: "approach_note", title: "Additional context" }`. Selecting an
-option must not clear its note; editing the note must not activate custom-answer
-mode. Persist both values in the existing `answers` map and return them under
-the same schema property keys in ACP `content`:
+Negotiation happens per feature, and some features require both directions.
 
-```json
-{ "approach": "Small change", "approach_note": "Keep the public API stable." }
-```
+- An **agent** advertises everything it implements under `InitializeResponse.agentCapabilities._meta.lody`.
+- A **client** advertises its own features under `InitializeRequest.clientCapabilities._meta.lody`.
+- Each key maps to an object containing at least `{ "version": 1 }`. A missing key means the peer does not support that feature, and support for one feature never implies support for another.
+- A feature that needs both directions, such as `subagentEvents`, is active only after both peers advertise it. Agent-only features can be used as soon as the agent advertises them.
 
-Notes are strings, never option arrays. Omit an empty note. Cancellation and
-decline retain their ACP meaning. `LodyElicitationAnswer` stays `string | string[]`
-for backward compatibility; the note's schema narrows its value to a string.
-Adapters translate these separate fields into provider-native answers, preserving
-the choice. Provider-specific note prefixes do not belong in Core or client UI.
-Read-only presentation must retain notes and mask secret notes independently.
+When ACP already provides a suitable message, the extension rides on it and no new method is added. Only when ACP has no equivalent request or notification does the contract define a `_lody/...` method.
 
-Use distinct, nonempty question and note keys, including when user-supplied ids
-already end in `_note`. A note must reference an existing question in the same
-schema and must not also declare `customAnswerFor`. Permit at most one note per
-question; no self-reference, reference chains, or references to custom-answer
-fields. Consumers must reject malformed associations rather than overwrite or
-reinterpret another answer. These are wire validation rules, not runtime
-validation supplied by this type-only contract.
+## Capability catalog
 
-Publish Core 0.1.6 before releasing consumers of the new types. Updating Core
-alone does not enable note support in an adapter or client.
+### Agent capabilities (`LodyExtensionCapabilities`)
 
-## Usage accounting
+| Capability | What version 1 adds |
+| --- | --- |
+| `subagentEvents` | After **both** peers advertise it, the agent pushes child-run snapshots, progress, and output on [`_lody/subagents/event`](#custom-_lody-methods). Run IDs are opaque and never reuse native thread IDs; when observation is lost, the run state becomes `unknown` with `outputIncomplete: true`. `LodySubagentEmitter` is an optional adapter helper that covers one root session. |
+| `sessionTitle` | The adapter owns automatic title generation and pushes a standard ACP `session_info_update` tagged with `_meta.lody.titleSource`. No request method is added. `generated` and `explicit` are authoritative title sources; `fallback` and `unset` are not. A title the user has set is always preserved. |
+| `usage` | Context and token accounting. Prefer the standard ACP `usage_update`. Cumulative totals live in `modelUsage`; `delta` describes the newly accounted contribution and is already included in that total. The optional `_meta.lody.usageScopeId` makes `modelUsage` cumulative only within its scope, so a restarted adapter can begin a new scope. Missing cost means unknown, not zero. |
+| `rateLimits` | Quota snapshots pushed on [`_lody/rate_limits/update`](#custom-_lody-methods). With `query: true`, the agent also accepts [`_lody/rate_limits/get`](#custom-_lody-methods). `windows` is the complete current list; a `label` is display-only, and windows with equal durations remain separate meters. |
+| `forkAtTurn` | `session/fork` may carry `_meta.lody.forkAtTurn` (`{ version: 1, turnId? }`) to name the turn to fork from. |
+| `steering` | Inject guidance into an in-flight turn. The agent advertises `transport` (`request` uses [`_lody/session/steer`](#custom-_lody-methods); `prompt` uses `_meta.lody.steer`), `upstreamTurn` (`same` or `handoff`), and `configPolicy` (`active` or `apply`). The result is `injected` or `failed`, and [`_lody/session/steer_applied`](#custom-_lody-methods) confirms the ID. |
+| `tasks` | Background (`background: true`) and scheduled (`scheduled: true`) work. Lifecycle rides on ordinary `tool_call` / `tool_call_update` messages tagged with `_meta.lody.task` (`kind` is `background` or `scheduled`). |
+| `subagents` | Subagent lifecycle on the same tool-call envelope (`kind: "subagent"`), independent of `subagentEvents`. `list`, `cancel`, and `output` each enable one query method. A client should show a control only when the individual run advertises it. |
+| `goal` | A durable session goal rather than a prompt. `actions` lists everything the agent implements. `controlActions` are accepted on [`_lody/session/goal`](#custom-_lody-methods) while a prompt is in flight and never start a turn. `promptActions` travel on `session/prompt` as `_meta.lody.goalControl`; `set` and `resume` start work and therefore belong there, so the resulting turns stay attached to the client's own prompt. Read the transport from these two lists, not from `actions` alone. |
+| `compaction` | Context compaction and retry, reported as a tool lifecycle tagged with `_meta.lody.activity` (`kind` is `context_compaction` or `retry`). |
+| `sessionHistory` | Accepts [`_lody/session/history/read`](#custom-_lody-methods) for one session. The response body is empty. |
+| `worktreeProject` | On `session/new`, `session/load`, `session/resume`, and `session/fork`, `_meta.lody.worktreeProject` names the original project root (`originProjectPath`). ACP `cwd` remains the real execution directory. Omitting the field leaves the provider's ordinary project assignment unchanged. |
 
-`SessionUsageUpdate` keeps the latest operation in `usage`, cumulative per-model
-totals in `modelUsage`, and optionally the newly accounted contribution in `delta`
-(`usage` plus `modelUsage`). Delta is already included in the cumulative snapshot;
-never add both. Legacy producers may omit delta and may use different top-level
-usage scopes; accounting consumers use `modelUsage`.
+### Client capabilities (`LodyClientExtensionCapabilities`)
 
-Adapters whose cumulative counters cannot survive a restart should scope each
-update with `_meta.lody.usageScopeId`. `modelUsage` is then cumulative only
-within that scope; consumers account every scope independently and sum them. A
-scope id is unique within the ACP session and never reused, so a restarted
-adapter starts a new scope instead of re-entering an old one from zero. Prefer a
-native identity that already exists, such as a turn or SDK result id.
+| Capability | What version 1 adds |
+| --- | --- |
+| `subagentEvents` | The client can receive [`_lody/subagents/event`](#custom-_lody-methods). Required together with the agent flag. |
+| `elicitation` | The client preserves Lody fields on the standard `elicitation/create`. `answerNotes: true` means a selected option and its separate note both survive editing, submission, and read-only display. `noteFor` adds a note; `customAnswerFor` replaces the referenced answer. The two do not combine. |
 
-All token buckets are disjoint. Missing cost means unknown, not free. Cost is USD,
-possibly an adapter's documented estimate rather than a provider invoice.
-An empty aggregate has no reported cost; it does not imply zero-dollar usage.
-`SessionUsageAccumulator` merges repeated operation IDs monotonically, including
-late completeness corrections, and returns detached snapshots. Keep it for the
-whole ACP accounting lifetime; replay must not contribute and compaction must not
-reset it. A process restart requires restored baselines or a new consumer accounting
-identity. The helper stores IDs/counters only and is not a durable billing ledger.
-Each instance scopes its updates with its own random `usageScopeId`, so a
-restarted process never re-enters an earlier instance's totals.
+### Standard ACP configuration
 
-Run `npm test` for synthetic accounting tests. Core 0.1.5 must be published before
-releasing consumers of the new runtime helper.
+This option uses a fixed ID and needs no separate capability flag.
 
-## Goal control
+| Id | What version 1 adds |
+| --- | --- |
+| `plan_mode` | A boolean option created by `createPlanModeConfigOption` and set through `session/set_config_option`. Advertise it only for sessions that can plan independently. It leaves sandbox and approval policy unchanged. |
 
-A goal is durable session state, not a running prompt. Its two halves travel on
-different transports because they need different things from ACP v1:
+### Canonical tool IDs
 
-| Transport                       | Actions               | Property                               |
-| ------------------------------- | --------------------- | -------------------------------------- |
-| `_lody/session/goal` request    | status-only actions   | Never starts a turn; works mid-prompt  |
-| `prompt._meta.lody.goalControl` | any advertised action | Runs inside the prompt the client owns |
+`LODY_TOOL_NAMES` defines the stable identities for tool flows that Lody handles specially. Adapters map provider-native names onto these values, and consumers never infer behavior from a human-facing title. The ID is sent as `_meta.lody.toolName`.
 
-The request exists for `pause` and `clear`: an active goal keeps a prompt open
-across the agent's own continuations, so a client that could only speak through
-prompts would have no way to reach a goal it wants to stop. Agents must accept
-these mid-prompt and must not start a turn for them.
+| ID | Flow |
+| --- | --- |
+| `ImageGeneration` | Image generation |
+| `CronCreate` | Create a schedule |
+| `CronDelete` | Delete a schedule |
+| `CronList` | List schedules |
+| `ScheduleWakeup` | Wake a scheduled run |
 
-`set` and `resume` start work, and ACP v1 gives a client exactly one way to own
-running work — its own prompt. The client sends a prompt carrying
-`_meta.lody.goalControl` instead of user-visible command text; the agent applies
-the action, adopts any turn the action started natively, and keeps that prompt
-open for the goal's remaining turns. Status-only actions may travel this way
-too, which is what lets a client reach a goal whose session is not running.
+## Custom `_lody/` methods
 
-An agent may also accept work-starting actions on the request for clients that
-cannot carry prompt metadata, but then the agent owns starting the work and the
-client sees turns it never prompted. Clients that must attribute every turn to a
-conversation entry use `promptActions` for exactly this reason.
+Method names and payload types are exported from `src/methods.ts`. `LodyExtensionRequestMap` and `LodyExtensionNotificationMap` bind each wire name to its DTO, so an adapter cannot implement a method against an unrelated type.
 
-`LodyGoalCapability` advertises `actions` (everything implemented),
-`controlActions` (accepted on the request while a prompt is in flight), and
-`promptActions` (accepted through prompt metadata). Clients must not infer an
-action's transport from `actions` alone.
+Requests:
 
-## Logical local project identity
+| Method | Request | Response |
+| --- | --- | --- |
+| `_lody/rate_limits/get` | Optional filters `sessionId`, `accountId`, `modelId`. The call is not session-bound. | The current `RateLimitsSnapshot`. |
+| `_lody/session/steer` | `sessionId`, `prompt` blocks, `steerId`. | `{ outcome: "injected" \| "failed" }`. |
+| `_lody/session/goal` | `sessionId` plus `set` (with `objective`) or `pause` / `resume` / `clear`. | A `{ goal }` snapshot, or `null` when cleared. |
+| `_lody/session/history/read` | `sessionId`. | An empty object. |
+| `_lody/subagents/list` | `sessionId`, optional `activeOnly`. | `{ tasks }`. |
+| `_lody/subagents/cancel` | `sessionId`, `taskId`, optional `reason`. | An empty object. |
+| `_lody/subagents/output` | `sessionId`, `taskId`, optional `tail`. | `{ output }`. |
 
-An agent advertising `worktreeProject: { version: 1 }` accepts
-`_meta.lody.worktreeProject: { version: 1, originProjectPath: "/absolute/project" }`
-on `session/new`, `session/load`, `session/resume`, and `session/fork`.
-`LodyWorktreeProject` defines the payload. The client resolves the original local
-project root on the agent host; ACP `cwd` remains the actual execution directory,
-which may be a worktree. Only send this extension after capability negotiation.
+Notifications (agent to client):
 
-The adapter resolves or creates the provider's project identity for that root.
-New sessions and fork targets use the requested project. Load/resume fills an
-unassigned session and preserves an existing assignment. Omission preserves
-ordinary provider behavior and never clears an assignment. An agent that accepts
-the extension must report an invalid or unresolvable project instead of silently
-claiming success without the requested association.
+| Method | Payload |
+| --- | --- |
+| `_lody/subagents/event` | `LodySubagentEvent`: `version: 1`, the root `sessionId`, an opaque `runId`, and then a `snapshot`, `progress`, or `output` (ACP text, thought, tool call, tool update, or plan). `isLodySubagentEvent` validates this boundary. Messages are delivered in connection order. |
+| `_lody/session/usage_update` | `SessionUsageUpdate`: the latest operation in `usage`, cumulative per-model totals in `modelUsage`, and an optional `delta`. |
+| `_lody/rate_limits/update` | The same snapshot shape as the query response. |
+| `_lody/session/steer_applied` | `sessionId` and `steerId`. |
 
-Project identity does not grant directory access, add workspace roots, change
-`cwd`, or transfer worktree creation/cleanup ownership to the provider. It does
-not change the standard `session/list.cwd` filter or promise a provider-specific
-worktree badge. Project-wide catalog queries are a separate extension concern.
+## Metadata on standard ACP messages
 
-## Plan mode configuration
+Each of these fields lives under `_meta.lody` on a message ACP already defines.
 
-`LODY_PLAN_MODE_CONFIG_ID` is `plan_mode`. `createPlanModeConfigOption(active)`
-builds the boolean ACP config option; clients send boolean values through
-`session/set_config_option` and consume normal config snapshots/updates. There
-is no separate Plan RPC or provider-specific collaboration vocabulary.
+| Field | Envelope | Role |
+| --- | --- | --- |
+| `forkAtTurn` | `session/fork` | The optional source turn. |
+| `elicitation` | `elicitation/create` | Questions, options, preview, secret, auto-resolve time, `customAnswerFor`, `noteFor`. |
+| `task` | `tool_call`, `tool_call_update` | Subagent, background, or scheduled lifecycle (`LodyTaskMeta`). |
+| `activity` | `tool_call`, `tool_call_update` | Compaction or retry (`LodyActivityMeta`). |
+| `toolName` | `tool_call`, `tool_call_update` | A canonical ID from `LODY_TOOL_NAMES`. |
+| `titleSource` | `session_info_update` | `explicit`, `generated`, `fallback`, or `unset`. |
+| `goal` | session update | The agent-published `LodyGoalSnapshot`, or `null`. |
+| `goalControl` | `session/prompt` | A client goal action. The prompt text is a fallback for when the action starts no native turn. |
+| `steer` | `session/prompt` | `{ id }` for the prompt transport. |
+| `notice` | session update | An `info`, `warning`, or `error` message. |
+| `messagePhase` | session update | `commentary` or `final_answer`. |
+| `worktreeProject` | `session/new`, `load`, `resume`, `fork` | `{ version: 1, originProjectPath }`. |
+| `usageScopeId` | usage update | The accounting scope. Unique within the ACP session and never reused. |
+| `turnId` | session meta | The turn ID, carried alongside the other session fields. |
 
-Providers advertise this option only for sessions that support independent
-planning. Selecting it preserves sandbox and approval policy; it does not
-promise read-only enforcement. Providers own the native translation, durable
-state, plan review, and pending-switch behavior. Claude's permission-based Plan
-mode is outside this contract.
+## Shared rules
+
+- Each feature is advertised independently. Support for one `{ "version": 1 }` must not be treated as support for the others.
+- Absolute timestamps are Unix epoch **seconds**, and the field name says so. Durations expressed in seconds also say so; `durationMs` is milliseconds.
+- Provider adapters map native payloads into these contracts. Consumers do not branch on provider-specific bodies.
+- Rate-limit `windows` is a complete replacement list. Never merge windows that share a duration, utilization, or reset time.
+- An elicitation note is its own string property. It survives an option change, and editing it does not switch the question into custom-answer mode. Empty notes are omitted, and each note references exactly one question in the same schema.
+- Usage token buckets are disjoint: input excludes cache reads and writes, and output excludes reasoning. `costUSD` is in US dollars and may be a documented estimate. Sum scopes independently, and never add `delta` on top of `modelUsage`.
+- `SessionUsageAccumulator` is process-local. Keep one instance for the accounting lifetime of the session; replay and compaction must not reset it.
+- Goal actions that only move state (`pause`, `clear`, and any other advertised `controlActions`) must be accepted mid-prompt and must not start a turn.
+- `worktreeProject` grants no directory access, does not change `cwd`, and does not move worktree creation or cleanup onto the provider. An accepted but unresolvable root is an error.
+- Plan mode does not promise a read-only sandbox. Claude's permission-mode plan switch is outside this contract.
+- Adapters emit only the current contracts. Compatibility with older payloads belongs at the consumer boundary and should be time-bounded.
+
+## Reference implementations
+
+The following public `acp-extension-*` repositories under [github.com/LodyAI](https://github.com/LodyAI) implement or consume this contract, as of 2026-10-01. This repository is the shared contract; the other eight are provider adapters that speak ACP v1 and map their provider onto the contracts above.
+
+| Repository | What it covers |
+| --- | --- |
+| [acp-extension-core](https://github.com/LodyAI/acp-extension-core) | Shared v1 types, capability flags, and `_lody/` methods. This repository. |
+| [acp-extension-claude](https://github.com/LodyAI/acp-extension-claude) | An ACP agent for the Claude Agent SDK, including Lody subagent events. |
+| [acp-extension-codex](https://github.com/LodyAI/acp-extension-codex) | An ACP server for the Codex CLI / App Server, including fork, steer, and goals. |
+| [acp-extension-devin](https://github.com/LodyAI/acp-extension-devin) | A proxy in front of Devin's native `devin acp`, translating Devin-only subagent traffic into Core events. |
+| [acp-extension-dsh](https://github.com/LodyAI/acp-extension-dsh) | ACP session controls for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): models, permissions, subagents, compaction. |
+| [acp-extension-grok](https://github.com/LodyAI/acp-extension-grok) | An ACP compatibility adapter for the official Grok runtime, including scheduled tasks and subagent events. |
+| [acp-extension-kimi](https://github.com/LodyAI/acp-extension-kimi) | The Kimi Code CLI packaged for Lody. |
+| [acp-extension-omp](https://github.com/LodyAI/acp-extension-omp) | The Oh My Pi adapter for Lody. |
+| [acp-extension-pi](https://github.com/LodyAI/acp-extension-pi) | An ACP adapter for the pinned official Pi CLI (`--mode rpc`). |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
