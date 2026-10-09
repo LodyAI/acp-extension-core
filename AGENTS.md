@@ -20,3 +20,6 @@
 - Subagent emitters require caller-owned negotiation, native ancestry validation and
   serialized delivery. Run IDs identify executions, not reusable native task IDs;
   progress counters never replace usage accounting.
+
+- Startup selection belongs in `LodySessionConfig`. Providers translate supported choices
+  before new/load/resume/fork; omitted metadata preserves native defaults.

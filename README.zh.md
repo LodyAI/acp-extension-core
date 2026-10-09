@@ -114,6 +114,7 @@ npm test           # 先构建，再运行契约测试
 | `goal` | 持久的会话目标，而不是一条 prompt。`actions` 列出 Agent 实现的全部动作。`controlActions` 是 prompt 进行期间可经 [`_lody/session/goal`](#自定义-_lody-方法) 接受的动作，它们不会开启新轮次。`promptActions` 随 `session/prompt` 的 `_meta.lody.goalControl` 传递；`set` 和 `resume` 会开始工作，因此必须走这条通道，由此产生的轮次才归属于客户端自己的 prompt。传输方式请以这两份列表为准，不能只看 `actions`。 |
 | `compaction` | 上下文压缩与重试，以工具调用生命周期上报，并带 `_meta.lody.activity`（`kind` 为 `context_compaction` 或 `retry`）。 |
 | `sessionHistory` | 接受针对单个会话的 [`_lody/session/history/read`](#自定义-_lody-方法)。响应体为空。 |
+| `sessionConfig` | 新建、加载、恢复、分叉时的客户端启动元数据：`{ version: 1, modelId?, configOptionValues }`。支持的选择在原生会话建立前应用；省略时保留原生默认行为。显式模型选择优先于模型选项。 |
 | `worktreeProject` | 在 `session/new`、`session/load`、`session/resume`、`session/fork` 上，`_meta.lody.worktreeProject` 指明原始项目根（`originProjectPath`）。ACP `cwd` 仍然是实际执行目录。省略该字段则保持提供方原有的项目归属不变。 |
 
 ### 客户端能力（`LodyClientExtensionCapabilities`）

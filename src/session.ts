@@ -158,7 +158,15 @@ export type LodyWorktreeProject = {
   originProjectPath: string;
 };
 
+/** Driving-turn configuration for new/load/resume/fork, before native session establishment. */
+export type LodySessionConfig = {
+  version: 1;
+  modelId?: string | undefined;
+  configOptionValues: Record<string, string | boolean>;
+};
+
 export type LodySessionMeta = {
+  sessionConfig?: LodySessionConfig;
   worktreeProject?: LodyWorktreeProject;
   turnId?: string;
   forkAtTurn?: { version: 1; turnId?: string };
