@@ -114,6 +114,7 @@ When ACP already provides a suitable message, the extension rides on it and no n
 | `goal` | A durable session goal rather than a prompt. `actions` lists everything the agent implements. `controlActions` are accepted on [`_lody/session/goal`](#custom-_lody-methods) while a prompt is in flight and never start a turn. `promptActions` travel on `session/prompt` as `_meta.lody.goalControl`; `set` and `resume` start work and therefore belong there, so the resulting turns stay attached to the client's own prompt. Read the transport from these two lists, not from `actions` alone. |
 | `compaction` | Context compaction and retry, reported as a tool lifecycle tagged with `_meta.lody.activity` (`kind` is `context_compaction` or `retry`). |
 | `sessionHistory` | Accepts [`_lody/session/history/read`](#custom-_lody-methods) for one session. The response body is empty. |
+| `sessionConfig` | Client→agent startup metadata on new/load/resume/fork: `{ version: 1, modelId?, configOptionValues }`. Apply supported selections before native establishment; absence preserves native defaults. Explicit model selection takes precedence over a model option. |
 | `worktreeProject` | On `session/new`, `session/load`, `session/resume`, and `session/fork`, `_meta.lody.worktreeProject` names the original project root (`originProjectPath`). ACP `cwd` remains the real execution directory. Omitting the field leaves the provider's ordinary project assignment unchanged. |
 
 ### Client capabilities (`LodyClientExtensionCapabilities`)
