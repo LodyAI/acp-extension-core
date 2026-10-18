@@ -69,4 +69,6 @@ export type LodyExtensionCapabilities = {
   compaction?: LodyVersionOneCapability;
   sessionHistory?: LodyVersionOneCapability;
   worktreeProject?: LodyVersionOneCapability;
+  /** Pushes `_lody/session/activity_update` levels, including outside client prompts. */
+  sessionActivity?: LodyVersionOneCapability;
 };

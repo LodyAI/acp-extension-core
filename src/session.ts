@@ -19,6 +19,31 @@ export type LodyActivityMeta = {
   failureReason?: string;
 };
 
+/**
+ * What the native agent is doing right now, whether or not a client prompt is
+ * open. `running` covers work the agent starts by itself, for example the turn
+ * that follows a finished background shell; `requires_action` means it waits
+ * on a permission request or question.
+ */
+export type LodySessionActivityState = 'idle' | 'running' | 'requires_action';
+
+/**
+ * A level, not an event: each update replaces the previous one for its
+ * session. Sent whenever either field changes. A client that never receives
+ * one, or whose agent process exits, must assume `idle` with no tasks.
+ */
+export type LodySessionActivityUpdate = {
+  version: 1;
+  sessionId: string;
+  state: LodySessionActivityState;
+  /**
+   * Live background tasks that will wake the agent when they finish or emit:
+   * shells, monitors, and background subagents. Excludes ambient tasks such
+   * as internal watchers that never count as user-visible work.
+   */
+  backgroundTaskCount: number;
+};
+
 export type LodyTaskKind = 'subagent' | 'background' | 'scheduled';
 export type LodyTaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
