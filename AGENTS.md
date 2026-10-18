@@ -23,3 +23,5 @@
 
 - Startup selection belongs in `LodySessionConfig`. Providers translate supported choices
   before new/load/resume/fork; omitted metadata preserves native defaults.
+- `sessionActivity` is a replace-semantics level. A client that received none,
+  or whose agent exited, treats the session as `idle` with no background tasks.

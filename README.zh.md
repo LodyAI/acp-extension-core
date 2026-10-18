@@ -115,6 +115,7 @@ npm test           # 先构建，再运行契约测试
 | `compaction` | 上下文压缩与重试，以工具调用生命周期上报，并带 `_meta.lody.activity`（`kind` 为 `context_compaction` 或 `retry`）。 |
 | `sessionHistory` | 接受针对单个会话的 [`_lody/session/history/read`](#自定义-_lody-方法)。响应体为空。 |
 | `sessionConfig` | 新建、加载、恢复、分叉时的客户端启动元数据：`{ version: 1, modelId?, configOptionValues }`。支持的选择在原生会话建立前应用；省略时保留原生默认行为。显式模型选择优先于模型选项。 |
+| `sessionActivity` | 当原生状态或存活后台任务数变化时，Agent 推送 [`_lody/session/activity_update`](#自定义-_lody-方法)，客户端 prompt 之间也会推送。客户端据此区分空闲会话，与在等后台 shell、monitor 或 subagent、或在它们结束后自行继续工作的会话。 |
 | `worktreeProject` | 在 `session/new`、`session/load`、`session/resume`、`session/fork` 上，`_meta.lody.worktreeProject` 指明原始项目根（`originProjectPath`）。ACP `cwd` 仍然是实际执行目录。省略该字段则保持提供方原有的项目归属不变。 |
 
 ### 客户端能力（`LodyClientExtensionCapabilities`）
@@ -168,6 +169,7 @@ npm test           # 先构建，再运行契约测试
 | `_lody/session/usage_update` | `SessionUsageUpdate`：`usage` 是最近一次操作，`modelUsage` 是按模型累计的总量，`delta` 可选。 |
 | `_lody/rate_limits/update` | 与查询响应相同的快照结构。 |
 | `_lody/session/steer_applied` | `sessionId` 和 `steerId`。 |
+| `_lody/session/activity_update` | `LodySessionActivityUpdate`：`version: 1`、`sessionId`、`state`（`idle`、`running` 或 `requires_action`）和 `backgroundTaskCount`。每次更新替换上一次的状态；未收到时按 `idle` 且无任务处理。 |
 
 ## 标准 ACP 消息上的元数据
 

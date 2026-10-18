@@ -7,6 +7,7 @@ export const LODY_EXTENSION_METHODS = {
   rateLimitsUpdate: '_lody/rate_limits/update',
   sessionSteer: '_lody/session/steer',
   sessionSteerApplied: '_lody/session/steer_applied',
+  sessionActivityUpdate: '_lody/session/activity_update',
   sessionGoal: '_lody/session/goal',
   sessionHistoryRead: '_lody/session/history/read',
   subagentsList: '_lody/subagents/list',
@@ -53,6 +54,7 @@ export type LodyExtensionNotificationMap = {
   [LODY_EXTENSION_METHODS.sessionUsageUpdate]: SessionUsageUpdate;
   [LODY_EXTENSION_METHODS.rateLimitsUpdate]: RateLimitsUpdate;
   [LODY_EXTENSION_METHODS.sessionSteerApplied]: LodySteerApplied;
+  [LODY_EXTENSION_METHODS.sessionActivityUpdate]: LodySessionActivityUpdate;
 };
 
 export type LodyExtensionRequestMethod = keyof LodyExtensionRequestMap;
@@ -77,6 +79,7 @@ import type {
 } from './rate-limits.js';
 import type {
   LodyGoalControlRequest,
+  LodySessionActivityUpdate,
   LodyGoalControlResponse,
   LodySessionHistoryReadRequest,
   LodySessionHistoryReadResponse,

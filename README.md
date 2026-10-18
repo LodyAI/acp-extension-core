@@ -115,6 +115,7 @@ When ACP already provides a suitable message, the extension rides on it and no n
 | `compaction` | Context compaction and retry, reported as a tool lifecycle tagged with `_meta.lody.activity` (`kind` is `context_compaction` or `retry`). |
 | `sessionHistory` | Accepts [`_lody/session/history/read`](#custom-_lody-methods) for one session. The response body is empty. |
 | `sessionConfig` | Client→agent startup metadata on new/load/resume/fork: `{ version: 1, modelId?, configOptionValues }`. Apply supported selections before native establishment; absence preserves native defaults. Explicit model selection takes precedence over a model option. |
+| `sessionActivity` | The agent pushes [`_lody/session/activity_update`](#custom-_lody-methods) whenever its native state or its count of live background tasks changes, including between client prompts. A client uses it to tell an idle session from one that is waiting on a background shell, a monitor, or a subagent, or that is working on its own after one finished. |
 | `worktreeProject` | On `session/new`, `session/load`, `session/resume`, and `session/fork`, `_meta.lody.worktreeProject` names the original project root (`originProjectPath`). ACP `cwd` remains the real execution directory. Omitting the field leaves the provider's ordinary project assignment unchanged. |
 
 ### Client capabilities (`LodyClientExtensionCapabilities`)
@@ -168,6 +169,7 @@ Notifications (agent to client):
 | `_lody/session/usage_update` | `SessionUsageUpdate`: the latest operation in `usage`, cumulative per-model totals in `modelUsage`, and an optional `delta`. |
 | `_lody/rate_limits/update` | The same snapshot shape as the query response. |
 | `_lody/session/steer_applied` | `sessionId` and `steerId`. |
+| `_lody/session/activity_update` | `LodySessionActivityUpdate`: `version: 1`, `sessionId`, `state` (`idle`, `running`, or `requires_action`), and `backgroundTaskCount`. Each update replaces the previous level; without one, assume `idle` with no tasks. |
 
 ## Metadata on standard ACP messages
 
