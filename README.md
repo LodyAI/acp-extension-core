@@ -97,6 +97,34 @@ Negotiation happens per feature, and some features require both directions.
 
 When ACP already provides a suitable message, the extension rides on it and no new method is added. Only when ACP has no equivalent request or notification does the contract define a `_lody/...` method.
 
+## Prompt suggestions
+
+Both agent and client opt in with `_meta.lody.promptSuggestions: { version: 1 }`.
+The agent sends `_lody/session/prompt_suggestion` with `LodyPromptSuggestion`:
+
+```ts
+{
+  sessionId: string;
+  sourceTurnId?: string;
+  suggestionId?: string;
+  result: { type: 'completed'; text: string | null } | { type: 'failed' };
+}
+```
+
+`sourceTurnId` is the native origin turn, only when known; `suggestionId` is an
+opaque suggestion/message ID, never a substitute for a turn. Codex preserves its
+source turn and result; Claude preserves its message UUID and suggestion text
+without inventing a source turn. Text is preserved verbatim, including empty
+strings; `null` means completed without a suggestion. Failure describes suggestion
+generation, not failure of the conversation turn.
+
+Notifications may arrive after prompt completion or after newer input. They are
+advisory and have no freshness guarantee, history/replay, request or retry API.
+Do not render them as assistant messages or automatically submit them as input.
+No notification is required for a suppressed generation. Use
+`supportsLodyPromptSuggestions` for negotiation and `isLodyPromptSuggestion` at
+untrusted receiving boundaries. Unknown capability versions do not opt in.
+
 ## Capability catalog
 
 ### Agent capabilities (`LodyExtensionCapabilities`)

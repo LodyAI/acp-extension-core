@@ -25,3 +25,7 @@
   before new/load/resume/fork; omitted metadata preserves native defaults.
 - `sessionActivity` is a replace-semantics level. A client that received none,
   or whose agent exited, treats the session as `idle` with no background tasks.
+
+- Prompt suggestions require both peers' v1 capability. Preserve native result and
+  identity; absent source turns stay absent. Delivery carries no freshness or
+  per-turn completion guarantee and must not drive conversation lifecycle.
