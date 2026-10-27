@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/LodyAI/acp-extension-core/compare/v0.2.0...v0.3.0) (2026-10-27)
+
+
+### Features
+
+* define negotiated prompt suggestions ([#24](https://github.com/LodyAI/acp-extension-core/issues/24)) ([3edd1d1](https://github.com/LodyAI/acp-extension-core/commit/3edd1d19f215640216fdc729e25b826ed41ff763))
+
 ## [0.2.0](https://github.com/LodyAI/acp-extension-core/compare/v0.1.9...v0.2.0) (2026-10-18)
 
 
