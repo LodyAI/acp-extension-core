@@ -10,6 +10,7 @@ export type LodyElicitationCapability = LodyVersionOneCapability & {
 
 /** Advertised under InitializeRequest.clientCapabilities._meta.lody. */
 export type LodyClientExtensionCapabilities = {
+  promptSuggestions?: LodyVersionOneCapability;
   subagentEvents?: LodyVersionOneCapability;
   elicitation?: LodyElicitationCapability;
 };
@@ -56,6 +57,7 @@ export type LodyRateLimitsCapability = LodyVersionOneCapability & {
 };
 
 export type LodyExtensionCapabilities = {
+  promptSuggestions?: LodyVersionOneCapability;
   subagentEvents?: LodyVersionOneCapability;
   /** Owns title generation; pushes tagged session_info_update titles without a client request. */
   sessionTitle?: LodyVersionOneCapability;

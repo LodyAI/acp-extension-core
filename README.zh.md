@@ -209,3 +209,27 @@ npm test           # 先构建，再运行契约测试
 ## 许可证
 
 MIT，详见 [LICENSE](LICENSE)。
+
+## 下一条提示建议
+
+agent 和 client 均通过 `_meta.lody.promptSuggestions: { version: 1 }` 协商。
+agent 发送 `_lody/session/prompt_suggestion`，载荷类型为 `LodyPromptSuggestion`：
+
+```ts
+{
+  sessionId: string;
+  sourceTurnId?: string;
+  suggestionId?: string;
+  result: { type: 'completed'; text: string | null } | { type: 'failed' };
+}
+```
+
+`sourceTurnId` 仅在已知时提供，表示原生来源 turn；`suggestionId` 是不透明的建议／消息
+标识，不能代替 turn。Codex 保留来源 turn 和结果；Claude 保留消息 UUID 和建议文本，
+不虚构来源 turn。文本原样保留，包括空字符串；`null` 表示生成完成但无建议。
+失败只描述建议生成，不表示对话 turn 失败。
+
+通知可能晚于 prompt 完成或新的输入，不保证新鲜度。它只供参考，没有历史重放、请求或
+重试 API。不得渲染为助手正文或自动作为输入发送。上游抑制生成时不要求发送通知。
+用 `supportsLodyPromptSuggestions` 检查协商，用 `isLodyPromptSuggestion` 校验不可信
+接收边界。未知能力版本不视为已协商。

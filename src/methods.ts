@@ -1,6 +1,8 @@
+import type { LodyPromptSuggestion } from './prompt-suggestions.js';
 import type { LodySubagentEvent } from './subagent-events.js';
 
 export const LODY_EXTENSION_METHODS = {
+  sessionPromptSuggestion: '_lody/session/prompt_suggestion',
   subagentEvent: '_lody/subagents/event',
   sessionUsageUpdate: '_lody/session/usage_update',
   rateLimitsGet: '_lody/rate_limits/get',
@@ -50,6 +52,7 @@ export type LodyExtensionRequestMap<TPrompt = unknown> = {
 };
 
 export type LodyExtensionNotificationMap = {
+  [LODY_EXTENSION_METHODS.sessionPromptSuggestion]: LodyPromptSuggestion;
   [LODY_EXTENSION_METHODS.subagentEvent]: LodySubagentEvent;
   [LODY_EXTENSION_METHODS.sessionUsageUpdate]: SessionUsageUpdate;
   [LODY_EXTENSION_METHODS.rateLimitsUpdate]: RateLimitsUpdate;
