@@ -12,6 +12,8 @@ export const LODY_EXTENSION_METHODS = {
   sessionActivityUpdate: '_lody/session/activity_update',
   sessionGoal: '_lody/session/goal',
   sessionHistoryRead: '_lody/session/history/read',
+  sessionArchive: '_lody/session/archive',
+  sessionUnarchive: '_lody/session/unarchive',
   subagentsList: '_lody/subagents/list',
   subagentsCancel: '_lody/subagents/cancel',
   subagentsOutput: '_lody/subagents/output',
@@ -21,6 +23,14 @@ export type LodyExtensionMethod =
   (typeof LODY_EXTENSION_METHODS)[keyof typeof LODY_EXTENSION_METHODS];
 
 export type LodyExtensionRequestMap<TPrompt = unknown> = {
+  [LODY_EXTENSION_METHODS.sessionArchive]: {
+    params: LodySessionArchiveRequest;
+    result: LodySessionArchiveResponse;
+  };
+  [LODY_EXTENSION_METHODS.sessionUnarchive]: {
+    params: LodySessionArchiveRequest;
+    result: LodySessionArchiveResponse;
+  };
   [LODY_EXTENSION_METHODS.rateLimitsGet]: {
     params: RateLimitsGetRequest;
     result: RateLimitsGetResponse;
@@ -81,6 +91,8 @@ import type {
   RateLimitsUpdate,
 } from './rate-limits.js';
 import type {
+  LodySessionArchiveRequest,
+  LodySessionArchiveResponse,
   LodyGoalControlRequest,
   LodySessionActivityUpdate,
   LodyGoalControlResponse,

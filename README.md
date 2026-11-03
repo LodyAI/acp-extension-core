@@ -237,3 +237,22 @@ Each of these fields lives under `_meta.lody` on a message ACP already defines.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Session archive
+
+Advertise `sessionArchive: { version: 1, mode: "native" | "title-marker" }` under
+`agentCapabilities._meta.lody`. Both `_lody/session/archive` and
+`_lody/session/unarchive` accept `{ sessionId }` and return `{}`. The identity is
+provider-native; neither operation loads a session or starts a model turn. They
+are idempotent, preserve the identity and history, and fail for an unknown session.
+Clients release the active runtime before changing its archive state. Adapters
+reject a session that is still active on the same connection.
+
+`native` means the provider persists a reversible archive outside its ordinary
+history. `title-marker` only marks the stored title, which may remain visible in
+the provider's own picker. Clients must distinguish that weaker result. Omitted
+or unknown capability versions mean unsupported; never substitute deletion.
+
+This narrow extension does not claim the listing and state-reporting guarantees
+of ACP's session archive RFD. Prefer standard ACP archive once the adapter and
+client SDK implement its complete contract.
