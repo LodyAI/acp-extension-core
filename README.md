@@ -208,7 +208,7 @@ Each of these fields lives under `_meta.lody` on a message ACP already defines.
 | `forkAtTurn` | `session/fork` | The optional source turn. |
 | `elicitation` | `elicitation/create` | Questions, options, preview, secret, auto-resolve time, `customAnswerFor`, `noteFor`. |
 | `task` | `tool_call`, `tool_call_update` | Subagent, background, or scheduled lifecycle (`LodyTaskMeta`). |
-| `activity` | `tool_call`, `tool_call_update` | Compaction or retry (`LodyActivityMeta`). |
+| `activity` | `tool_call`, `tool_call_update` | Compaction or retry (`LodyActivityMeta`). For compaction, a terminal ACP v1 `failed` status can carry `cancellationReason: 'cancelled' \| 'user-abort'` to identify a cancellation. |
 | `toolName` | `tool_call`, `tool_call_update` | A canonical ID from `LODY_TOOL_NAMES`. |
 | `titleSource` | `session_info_update` | `explicit`, `generated`, `fallback`, or `unset`. |
 | `goal` | session update | The agent-published `LodyGoalSnapshot`, or `null`. |

@@ -180,7 +180,7 @@ npm test           # 先构建，再运行契约测试
 | `forkAtTurn` | `session/fork` | 可选的来源轮次。 |
 | `elicitation` | `elicitation/create` | 问题、选项、预览、密文、自动解析时间、`customAnswerFor`、`noteFor`。 |
 | `task` | `tool_call`、`tool_call_update` | 子代理、后台或定时任务的生命周期（`LodyTaskMeta`）。 |
-| `activity` | `tool_call`、`tool_call_update` | 压缩或重试（`LodyActivityMeta`）。 |
+| `activity` | `tool_call`、`tool_call_update` | 压缩或重试（`LodyActivityMeta`）。上下文压缩使用 ACP v1 的终态 `failed` 时，可通过 `cancellationReason: 'cancelled' \| 'user-abort'` 标明取消原因。 |
 | `toolName` | `tool_call`、`tool_call_update` | `LODY_TOOL_NAMES` 中的稳定 id。 |
 | `titleSource` | `session_info_update` | `explicit`、`generated`、`fallback` 或 `unset`。 |
 | `goal` | 会话更新 | Agent 发布的 `LodyGoalSnapshot`，或 `null`。 |

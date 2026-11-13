@@ -17,6 +17,8 @@ export type LodyActivityMeta = {
   usedTokensAfter?: number;
   durationMs?: number;
   failureReason?: string;
+  /** ACP v1 uses a terminal failed tool status for cancellation. */
+  cancellationReason?: 'cancelled' | 'user-abort';
 };
 
 /**
