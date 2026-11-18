@@ -16,6 +16,7 @@ export type LodySubagentSnapshot = {
   name?: string;
   description?: string;
   modelId?: string;
+  reasoningEffort?: string;
   startedAtEpochSeconds?: number;
   endedAtEpochSeconds?: number;
   summary?: string;
@@ -70,7 +71,7 @@ export function isLodySubagentSnapshot(v: unknown): v is LodySubagentSnapshot {
   return record(s) && Array.isArray(s['stream']) && s['stream'].every(x => member(x, ['text', 'thought', 'tool', 'plan']))
     && typeof s['progress'] === 'boolean' && typeof s['cancel'] === 'boolean' && member(s['outputRead'], ['none', 'live_tail', 'final_tail'])
     && optional(v, ['parentRunId'], x => x === null || text(x))
-    && optional(v, ['parentToolCallId', 'name', 'description', 'modelId', 'summary'], text)
+    && optional(v, ['parentToolCallId', 'name', 'description', 'modelId', 'reasoningEffort', 'summary'], text)
     && optional(v, ['startedAtEpochSeconds', 'endedAtEpochSeconds'], number)
     && (v['outputIncomplete'] === undefined || v['outputIncomplete'] === true)
     && (v['reason'] === undefined || record(v['reason']) && member(v['reason']['code'], ['error', 'timeout', 'cancelled', 'disconnected', 'lost']) && optional(v['reason'], ['message'], text));

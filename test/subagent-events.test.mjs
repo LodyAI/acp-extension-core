@@ -9,6 +9,7 @@ test('subagent negotiation and event validation preserve only the closed executi
   assert.equal(supportsLodySubagentEvents({_meta: {lody: {subagentEvents: {version: 2}}}}), false);
   assert.equal(isLodySubagentEvent({...base, type: 'snapshot', snapshot: {
     state: 'unknown', outputIncomplete: true, reason: {code: 'disconnected'}, parentRunId: null,
+    modelId: 'worker-model', reasoningEffort: 'high',
     support: {stream: ['text', 'tool'], progress: false, outputRead: 'none', cancel: false},
   }}), true);
   assert.equal(isLodySubagentProgress({summary: null, lastToolName: 'read', totalTokens: 123}), true);
@@ -19,6 +20,7 @@ test('subagent negotiation and event validation preserve only the closed executi
     {...snapshot, state: ['running']},
     {...snapshot, support: {...snapshot.support, outputRead: ['none']}},
     {...snapshot, reason: {code: ['lost']}},
+    {...snapshot, reasoningEffort: 2},
   ]) assert.equal(isLodySubagentEvent({...base, type: 'snapshot', snapshot: malformed}), false);
   assert.equal(isLodySubagentEvent({...base, type: 'output', update: {sessionUpdate: 'usage_update', used: 1, size: 2}}), false);
   assert.equal(isLodySubagentEvent({...base, runId: '', type: 'output', update: {sessionUpdate: 'agent_message_chunk', content: {type: 'text', text: 'hello'}}}), false);
