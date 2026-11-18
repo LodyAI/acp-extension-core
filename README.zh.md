@@ -165,7 +165,7 @@ npm test           # 先构建，再运行契约测试
 
 | 方法 | 载荷 |
 | --- | --- |
-| `_lody/subagents/event` | `LodySubagentEvent`：`version: 1`、根 `sessionId`、不透明 `runId`，然后是 `snapshot`、`progress` 或 `output`（ACP 文本、思考、工具调用、工具更新或计划）。`isLodySubagentEvent` 负责校验这一边界。消息按连接顺序投递。 |
+| `_lody/subagents/event` | `LodySubagentEvent`：`version: 1`、根 `sessionId`、不透明 `runId`，然后是 `snapshot`、`progress` 或 `output`（ACP 文本、思考、工具调用、工具更新或计划）。快照可以携带运行时报告的子代理 `modelId` 和 `reasoningEffort`。`isLodySubagentEvent` 负责校验这一边界。消息按连接顺序投递。 |
 | `_lody/session/usage_update` | `SessionUsageUpdate`：`usage` 是最近一次操作，`modelUsage` 是按模型累计的总量，`delta` 可选。 |
 | `_lody/rate_limits/update` | 与查询响应相同的快照结构。 |
 | `_lody/session/steer_applied` | `sessionId` 和 `steerId`。 |

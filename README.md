@@ -193,7 +193,7 @@ Notifications (agent to client):
 
 | Method | Payload |
 | --- | --- |
-| `_lody/subagents/event` | `LodySubagentEvent`: `version: 1`, the root `sessionId`, an opaque `runId`, and then a `snapshot`, `progress`, or `output` (ACP text, thought, tool call, tool update, or plan). `isLodySubagentEvent` validates this boundary. Messages are delivered in connection order. |
+| `_lody/subagents/event` | `LodySubagentEvent`: `version: 1`, the root `sessionId`, an opaque `runId`, and then a `snapshot`, `progress`, or `output` (ACP text, thought, tool call, tool update, or plan). The snapshot can include the child's observed `modelId` and `reasoningEffort`. `isLodySubagentEvent` validates this boundary. Messages are delivered in connection order. |
 | `_lody/session/usage_update` | `SessionUsageUpdate`: the latest operation in `usage`, cumulative per-model totals in `modelUsage`, and an optional `delta`. |
 | `_lody/rate_limits/update` | The same snapshot shape as the query response. |
 | `_lody/session/steer_applied` | `sessionId` and `steerId`. |
