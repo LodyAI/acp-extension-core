@@ -56,6 +56,11 @@ export type LodyRateLimitsCapability = LodyVersionOneCapability & {
   query?: true;
 };
 
+/** Both operations preserve history and work without loading or prompting a session. */
+export type LodySessionArchiveCapability = LodyVersionOneCapability & {
+  mode: 'native' | 'title-marker';
+};
+
 export type LodyExtensionCapabilities = {
   promptSuggestions?: LodyVersionOneCapability;
   subagentEvents?: LodyVersionOneCapability;
@@ -70,6 +75,7 @@ export type LodyExtensionCapabilities = {
   goal?: LodyGoalCapability;
   compaction?: LodyVersionOneCapability;
   sessionHistory?: LodyVersionOneCapability;
+  sessionArchive?: LodySessionArchiveCapability;
   worktreeProject?: LodyVersionOneCapability;
   /** Pushes `_lody/session/activity_update` levels, including outside client prompts. */
   sessionActivity?: LodyVersionOneCapability;

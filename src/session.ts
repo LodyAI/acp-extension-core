@@ -1,5 +1,9 @@
 export type LodyActivityKind = 'context_compaction' | 'retry';
 
+/** Exact provider-native identity. Archive and unarchive are idempotent. */
+export type LodySessionArchiveRequest = { sessionId: string };
+export type LodySessionArchiveResponse = Record<string, never>;
+
 /** Canonical identities for tool flows that Lody handles specially. */
 export const LODY_TOOL_NAMES = {
   imageGeneration: 'ImageGeneration',

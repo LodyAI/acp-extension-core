@@ -233,3 +233,16 @@ agent 发送 `_lody/session/prompt_suggestion`，载荷类型为 `LodyPromptSugg
 重试 API。不得渲染为助手正文或自动作为输入发送。上游抑制生成时不要求发送通知。
 用 `supportsLodyPromptSuggestions` 检查协商，用 `isLodyPromptSuggestion` 校验不可信
 接收边界。未知能力版本不视为已协商。
+
+## 会话归档
+
+Agent 在 `agentCapabilities._meta.lody` 声明
+`sessionArchive: { version: 1, mode: "native" | "title-marker" }`。
+`_lody/session/archive` 和 `_lody/session/unarchive` 接受原生 `{ sessionId }`，
+返回 `{}`。操作幂等，保留身份和历史，不加载会话、不启动模型轮次；未知会话应报错。
+客户端先释放运行时，适配器拒绝在当前连接仍活跃的会话。
+
+`native` 表示提供方持久化可恢复的原生归档；`title-marker` 仅标记存储标题，
+会话可能仍出现在原生选择列表里，客户端必须区分。能力缺失或版本未知即不支持，
+不能以删除代替归档。这个窄扩展不承诺 ACP 归档 RFD 的列表和状态报告保证，
+待客户端 SDK 和适配器完整支持标准契约后，应优先使用标准 ACP 归档。
